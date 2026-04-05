@@ -243,6 +243,49 @@ pub fn filter_same_strand_overlaps(selected: &mut Vec<usize>, all: &[Gene], max_
         .filter(|&(i, _)| keep[i]).map(|(_, v)| v).collect();
 }
 
+/// Filter opposite-strand overlaps > max_ov bp.
+/// Prodigal: max 200bp opposite-strand overlap, and < 50% of either gene.
+/// Remove the shorter gene in conflicting pairs.
+pub fn filter_opposite_strand_overlaps(selected: &mut Vec<usize>, all: &[Gene], max_ov: usize) {
+    let mut sorted: Vec<usize> = selected.clone();
+    sorted.sort_by_key(|&i| all[i].start);
+    let mut keep = vec![true; sorted.len()];
+    for i in 0..sorted.len() {
+        if !keep[i] { continue; }
+        let a = &all[sorted[i]];
+        for j in (i + 1)..sorted.len() {
+            if !keep[j] { continue; }
+            let b = &all[sorted[j]];
+            if b.start > a.end { break; }
+            // Only opposite strand
+            if a.is_plus == b.is_plus { continue; }
+            let ov_s = a.start.max(b.start);
+            let ov_e = a.end.min(b.end);
+            if ov_e >= ov_s {
+                let overlap = ov_e - ov_s + 1;
+                let a_len = a.end - a.start + 1;
+                let b_len = b.end - b.start + 1;
+                // Reject if overlap > max_ov OR > 50% of either gene
+                if overlap > max_ov || overlap * 2 > a_len || overlap * 2 > b_len {
+                    // Remove the shorter/lower-scoring gene
+                    if a.length > b.length || (a.length == b.length && a.score >= b.score) {
+                        keep[j] = false;
+                    } else {
+                        keep[i] = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    let removed = keep.iter().filter(|&&k| !k).count();
+    if removed > 0 {
+        eprintln!("Opposite-strand overlap filter: {} genes removed", removed);
+    }
+    *selected = sorted.into_iter().enumerate()
+        .filter(|&(i, _)| keep[i]).map(|(_, v)| v).collect();
+}
+
 pub fn detect_shadows(genes: &mut [Gene]) {
     let n = genes.len();
     if n < 2 { return; }

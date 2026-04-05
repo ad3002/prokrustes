@@ -14,6 +14,7 @@ use crate::scoring::{composite_score, compute_gc3, compute_gc3_bias, edge_coding
 use crate::selection::{
     dp_select, gap_fill, detect_shadows, connection_score, operon_rescue,
     rescue_atypical, refine_starts, gap_targeted_rescue, filter_same_strand_overlaps,
+    filter_opposite_strand_overlaps,
 };
 use crate::types::{HexModel, MonoModel};
 
@@ -1330,6 +1331,9 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
 
     // 15d. Filter same-strand overlaps > 45bp (cycle 20 cleanup, relaxed threshold)
     filter_same_strand_overlaps(&mut results, &all_orfs, 45);
+
+    // 15e. Opposite-strand overlap filter (Prodigal: max 200bp, < 50% of either gene)
+    filter_opposite_strand_overlaps(&mut results, &all_orfs, 200);
 
     // 15f. Operon-internal gene rescue
     // If two same-strand selected genes have a gap >200bp, look for ORFs in that gap
