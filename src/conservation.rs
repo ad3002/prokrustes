@@ -135,7 +135,7 @@ impl KmerIndex {
 pub fn build_comparison_index(fasta_path: &str) -> Option<(Vec<Gene>, KmerIndex)> {
     let genome = io::read_fasta(fasta_path);
     if genome.len() < 1000 { return None; }
-    let genes = crate::pipeline::annotate(&genome);
+    let (genes, _) = crate::pipeline::annotate(&genome);
     let index = KmerIndex::build(&genome, &genes);
     eprintln!("  Comparison {}: {} genes, {} k-mers",
         fasta_path.rsplit('/').next().unwrap_or(fasta_path),

@@ -92,12 +92,12 @@ pub fn main_cli() {
 
     // Dump TSV: output only final selected genes with all features
     if args.len() >= 3 && args[2] == "--dump-tsv" {
-        let genes = annotate(&genome);
+        let (genes, _) = annotate(&genome);
         dump_tsv(&genes);
         return;
     }
 
-    let mut genes = annotate(&genome);
+    let (mut genes, all_orfs) = annotate(&genome);
     filter_ncrna_overlaps(&mut genes, &ncrna_regions);
 
     // IS element / repeat family correction (post-annotation)
@@ -146,12 +146,10 @@ pub fn main_cli() {
     // So we get them via annotate_return_all() which scores everything
     if let Some(ref model_path) = model_path {
         if let Some(model) = crate::lgb_model::LgbModel::load(model_path) {
-            let scored_orfs = annotate_return_all(&genome);
-
-            // Index scored ORFs by (strand, end) = same stop group
+            // Index all scored ORFs by (strand, end) = same stop group
             let mut end_idx: std::collections::HashMap<(bool, usize), Vec<&crate::types::Gene>> =
                 std::collections::HashMap::new();
-            for orf in &scored_orfs {
+            for orf in &all_orfs {
                 end_idx.entry((orf.is_plus, orf.end)).or_default().push(orf);
             }
 
@@ -236,7 +234,7 @@ pub fn main_cli() {
         let mut comp_data: Vec<(Vec<u8>, Vec<Gene>, crate::conservation::KmerIndex)> = Vec::new();
         for fasta in &compare_fastas {
             let comp_genome = crate::io::read_fasta(fasta);
-            let comp_genes = annotate(&comp_genome);
+            let (comp_genes, _) = annotate(&comp_genome);
             let idx = crate::conservation::KmerIndex::build(&comp_genome, &comp_genes);
             eprintln!("  {}: {} genes", fasta.rsplit('/').next().unwrap_or(fasta), comp_genes.len());
             comp_data.push((comp_genome, comp_genes, idx));
@@ -419,7 +417,7 @@ fn debug_gene(genome: &[u8], target_start: usize, target_end: usize, target_plus
     // 2. Run full annotation and check what happens to this region
     eprintln!();
     eprintln!("  Running full annotation...");
-    let genes = annotate(genome);
+    let (genes, _) = annotate(genome);
 
     let matching: Vec<&Gene> = genes.iter().filter(|g| {
         g.start <= target_end && g.end >= target_start && g.is_plus == target_plus
@@ -706,7 +704,7 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
     (results, filtered)
 }
 
-pub fn annotate(genome: &[u8]) -> Vec<Gene> {
+pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     let glen = genome.len();
     let rc = rev_comp(genome);
 
@@ -774,11 +772,12 @@ pub fn annotate(genome: &[u8]) -> Vec<Gene> {
         Some(m) => m,
         None => {
             // Emergency fallback
-            let mut result: Vec<Gene> = plus.into_iter().chain(minus.into_iter())
+            let all: Vec<Gene> = plus.into_iter().chain(minus.into_iter()).collect();
+            let mut result: Vec<Gene> = all.iter()
                 .filter(|o| o.length >= 300 && o.is_longest && o.is_atg())
-                .collect();
+                .cloned().collect();
             result.sort_by_key(|g| g.start);
-            return result;
+            return (result, all);
         }
     };
 
@@ -1315,8 +1314,9 @@ pub fn annotate(genome: &[u8]) -> Vec<Gene> {
     // 124 of 221 FP are pseudogenes, but we can't remove them without
     // also removing real genes. Code kept for future use with homology info.
 
-    output
+    (output, all_orfs)
 }
+
 
 fn get_intergenic_regions(genome: &[u8], genes: &[Gene], min_gap: usize) -> Vec<Vec<u8>> {
     if genes.is_empty() { return vec![]; }
