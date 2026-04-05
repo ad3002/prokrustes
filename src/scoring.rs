@@ -1,10 +1,16 @@
 use crate::types::{Gene, HexModel};
 use crate::io::hex_enc;
 
-/// Composite score matching monolith's compute_composite_score exactly.
+/// Composite score with GC-adjusted length normalization.
 pub fn composite_score(g: &Gene, gc3_target: f64) -> f64 {
     let len = g.length as f64;
-    let len_norm = 1.0 - (-len / 300.0).exp();
+    // GC-adjusted length: in high-GC genomes stop codons are rare,
+    // creating long spurious ORFs. Reduce length bonus there.
+    // In low-GC, stop codons are frequent — boost length bonus.
+    // gc3_target ~0.5 for E.coli, ~0.83 for Pseudomonas, ~0.20 for Borrelia
+    let gc_frac = gc3_target.clamp(0.2, 0.85);
+    let len_scale = 300.0 + (gc_frac - 0.5) * 400.0; // 220 at gc=0.3, 300 at gc=0.5, 440 at gc=0.8
+    let len_norm = 1.0 - (-len / len_scale).exp();
     let st = g.start_type();
     let hex_norm = ((g.hex_avg + 1.5) / 4.5).clamp(0.0, 1.0);
     let fb_norm = (g.frame_bias / 3.0).clamp(0.0, 1.0);
