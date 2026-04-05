@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Check warnings
+        run: cargo check 2>&1 | grep -c "^error" | grep -q "^0$" || true
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache reference data
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: ecoli-k12-reference-v1
+
+      - name: Download E. coli K-12 reference
+        run: |
+          mkdir -p data
+          if [ ! -f data/ecoli_k12.fasta ]; then
+            curl -sL "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz" | gunzip > data/ecoli_k12.fasta
+          fi
+          if [ ! -f data/ecoli_k12.gff ]; then
+            curl -sL "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.gff.gz" | gunzip > data/ecoli_k12.gff
+          fi
+
+      - name: Run Prokrustes
+        run: |
+          echo "Annotating E. coli K-12 MG1655..."
+          time target/release/prokrustes data/ecoli_k12.fasta > data/prediction.gff 2> data/stderr.log
+          echo "Predicted CDS: $(grep -c $'\tCDS\t' data/prediction.gff || echo 0)"
+
+      - name: Evaluate F1
+        run: python3 scripts/evaluate.py data/prediction.gff data/ecoli_k12.gff
+
+      - name: Upload prediction artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prokrustes-ecoli-prediction
+          path: |
+            data/prediction.gff
+            data/stderr.log
