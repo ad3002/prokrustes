@@ -684,12 +684,6 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
         }
     }
 
-    // 3b. Connection scoring — DISABLED: F1 0.938→0.937
-    // Doesn't improve over ML-weighted baseline. Borderline genes that
-    // connection scoring helps are already captured by operon_boost.
-    // Code kept in selection.rs for future use.
-    // connection_score(&mut filt_genes);
-
     // 4. Compute weights (matches monolith exactly)
     for &i in &filtered {
         let orf = &all_orfs[i];
@@ -705,6 +699,15 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
 
         let w = (orf.score - base) + (orf.hex_total * 0.004).max(0.0);
         all_orfs[i].weight = w;
+    }
+
+    // 4b. Connection scoring: bonus for genes packed in operons
+    {
+        let mut filt_genes: Vec<Gene> = filtered.iter().map(|&i| all_orfs[i].clone()).collect();
+        connection_score(&mut filt_genes);
+        for (fi, &oi) in filtered.iter().enumerate() {
+            all_orfs[oi].weight = filt_genes[fi].weight; // includes connection bonus
+        }
     }
 
     // 5. Per-strand iterative DP (4 iterations)
