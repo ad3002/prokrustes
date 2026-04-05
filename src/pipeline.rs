@@ -244,22 +244,24 @@ pub fn main_cli() {
         None
     };
 
-    // Output JSON with optional conservation
-    print!("[");
+    // Output GFF3
+    println!("##gff-version 3");
     for (i, g) in genes.iter().enumerate() {
-        if i > 0 { print!(","); }
         let strand = if g.is_plus { "+" } else { "-" };
+        let codon = std::str::from_utf8(&g.start_codon).unwrap_or("???");
+        let mut attrs = format!(
+            "ID=gene_{};start_type={};rbs_score={:.2};hex_score={:.4}",
+            i + 1, codon, g.rbs, g.hex_avg
+        );
         if let Some(ref scores) = cons_scores {
-            let cons = if i < scores.len() { scores[i] } else { 0.0 };
-            let label = crate::conservation::conservation_label(cons);
-            print!("{{\"start\":{},\"end\":{},\"strand\":\"{}\",\"confidence\":\"{}\"}}",
-                g.start, g.end, strand, label);
-        } else {
-            print!("{{\"start\":{},\"end\":{},\"strand\":\"{}\"}}",
-                g.start, g.end, strand);
+            if i < scores.len() {
+                let label = crate::conservation::conservation_label(scores[i]);
+                attrs.push_str(&format!(";conservation={}", label));
+            }
         }
+        println!(".\tprokrustes\tCDS\t{}\t{}\t{:.1}\t{}\t0\t{}",
+            g.start, g.end, g.score, strand, attrs);
     }
-    println!("]");
 }
 
 /// Dump all genes as TSV with every internal feature.

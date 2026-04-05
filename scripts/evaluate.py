@@ -12,8 +12,8 @@ Start accuracy: |predicted_start - known_start| <= 3 bp.
 import sys
 
 
-def parse_gff_cds(path):
-    """Parse CDS entries from a GFF3 file."""
+def parse_prediction_gff(path):
+    """Parse CDS entries from a prediction GFF (Prokrustes or Prodigal)."""
     genes = []
     with open(path) as f:
         for line in f:
@@ -22,17 +22,58 @@ def parse_gff_cds(path):
             fields = line.strip().split('\t')
             if len(fields) < 9:
                 continue
-            if fields[2] not in ('CDS', 'gene'):
-                continue
-            # For NCBI GFF: use CDS; for Prodigal: use CDS
-            # Skip pseudo genes in NCBI annotations
-            if 'pseudo=true' in fields[8]:
+            if fields[2] != 'CDS':
                 continue
             genes.append({
                 "start": int(fields[3]),
                 "end": int(fields[4]),
                 "strand": fields[6],
             })
+    return genes
+
+
+def parse_reference_gff(path):
+    """Parse reference CDS from NCBI GFF3.
+
+    NCBI GFF has multiple CDS rows per gene (one per protein/exon).
+    We deduplicate by taking unique (start, end, strand) tuples.
+    We also skip pseudogenes and non-protein-coding features.
+    """
+    genes = []
+    seen = set()
+    with open(path) as f:
+        for line in f:
+            if line.startswith('#'):
+                continue
+            fields = line.strip().split('\t')
+            if len(fields) < 9:
+                continue
+            # Use 'gene' type for NCBI reference — one per locus
+            # Fall back to 'CDS' if no 'gene' entries found
+            if fields[2] not in ('gene', 'CDS'):
+                continue
+            attrs = fields[8]
+            # Skip pseudogenes
+            if 'pseudo=true' in attrs or 'pseudogene=' in attrs:
+                continue
+            # Skip non-protein-coding genes (rRNA, tRNA, ncRNA)
+            if 'gene_biotype=' in attrs and 'protein_coding' not in attrs:
+                # Only skip if biotype is explicitly non-coding
+                biotype = ''
+                for part in attrs.split(';'):
+                    if part.startswith('gene_biotype='):
+                        biotype = part.split('=')[1]
+                if biotype and biotype != 'protein_coding':
+                    continue
+
+            key = (int(fields[3]), int(fields[4]), fields[6])
+            if key not in seen:
+                seen.add(key)
+                genes.append({
+                    "start": key[0],
+                    "end": key[1],
+                    "strand": key[2],
+                })
     return genes
 
 
@@ -92,13 +133,12 @@ def main():
     ref_path = sys.argv[2]
     tsv_mode = "--tsv" in sys.argv
 
-    predicted = parse_gff_cds(pred_path)
-    known = parse_gff_cds(ref_path)
+    predicted = parse_prediction_gff(pred_path)
+    known = parse_reference_gff(ref_path)
 
     m = evaluate(predicted, known)
 
     if tsv_mode:
-        # TSV output for machine parsing: ref_cds pred_cds tp fp fn prec recall f1 start_acc
         print(f"{m['known']}\t{m['predicted']}\t{m['tp']}\t{m['fp']}\t{m['fn']}\t"
               f"{m['precision']:.4f}\t{m['sensitivity']:.4f}\t{m['f1']:.4f}\t"
               f"{m['start_accuracy']:.4f}")
