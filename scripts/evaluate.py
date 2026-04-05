@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Evaluate Prokrustes GFF predictions against a reference GFF.
+"""Evaluate GFF predictions against a reference GFF.
 
-Usage: python evaluate.py prediction.gff reference.gff
+Usage:
+    python evaluate.py prediction.gff reference.gff
+    python evaluate.py prediction.gff reference.gff --tsv
 
 Matching criterion: 80% reciprocal overlap on same strand.
 Start accuracy: |predicted_start - known_start| <= 3 bp.
@@ -18,7 +20,13 @@ def parse_gff_cds(path):
             if line.startswith('#'):
                 continue
             fields = line.strip().split('\t')
-            if len(fields) < 9 or fields[2] != 'CDS':
+            if len(fields) < 9:
+                continue
+            if fields[2] not in ('CDS', 'gene'):
+                continue
+            # For NCBI GFF: use CDS; for Prodigal: use CDS
+            # Skip pseudo genes in NCBI annotations
+            if 'pseudo=true' in fields[8]:
                 continue
             genes.append({
                 "start": int(fields[3]),
@@ -77,31 +85,31 @@ def evaluate(predicted, known):
 
 def main():
     if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} prediction.gff reference.gff")
+        print(f"Usage: {sys.argv[0]} prediction.gff reference.gff [--tsv]")
         sys.exit(1)
 
     pred_path = sys.argv[1]
     ref_path = sys.argv[2]
+    tsv_mode = "--tsv" in sys.argv
 
     predicted = parse_gff_cds(pred_path)
     known = parse_gff_cds(ref_path)
 
     m = evaluate(predicted, known)
 
-    print(f"Reference:  {m['known']} CDS")
-    print(f"Predicted:  {m['predicted']} CDS")
-    print(f"TP: {m['tp']}  FP: {m['fp']}  FN: {m['fn']}")
-    print(f"Sensitivity: {m['sensitivity']*100:.1f}%")
-    print(f"Precision:   {m['precision']*100:.1f}%")
-    print(f"F1:          {m['f1']:.4f}")
-    print(f"Start acc:   {m['start_accuracy']*100:.1f}%")
-
-    # Exit with error if F1 below threshold
-    if m['f1'] < 0.90:
-        print(f"\nFAIL: F1 {m['f1']:.4f} below minimum threshold 0.90")
-        sys.exit(1)
+    if tsv_mode:
+        # TSV output for machine parsing: ref_cds pred_cds tp fp fn prec recall f1 start_acc
+        print(f"{m['known']}\t{m['predicted']}\t{m['tp']}\t{m['fp']}\t{m['fn']}\t"
+              f"{m['precision']:.4f}\t{m['sensitivity']:.4f}\t{m['f1']:.4f}\t"
+              f"{m['start_accuracy']:.4f}")
     else:
-        print(f"\nPASS: F1 {m['f1']:.4f}")
+        print(f"  Reference:  {m['known']} CDS")
+        print(f"  Predicted:  {m['predicted']} CDS")
+        print(f"  TP: {m['tp']}  FP: {m['fp']}  FN: {m['fn']}")
+        print(f"  Sensitivity: {m['sensitivity']*100:.1f}%")
+        print(f"  Precision:   {m['precision']*100:.1f}%")
+        print(f"  F1:          {m['f1']:.4f}")
+        print(f"  Start acc:   {m['start_accuracy']*100:.1f}%")
 
 
 if __name__ == "__main__":

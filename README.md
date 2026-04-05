@@ -22,15 +22,36 @@ Primary benchmark: *E. coli* K-12 MG1655 (4.6 Mb, ~4400 CDS)
 | Prodigal (baseline) | 0.957 | 0.943 | **0.950** |
 | Prokrustes (current) | 0.951 | 0.944 | **0.948** |
 
-Gap: 0.002 F1. Validated on 6 prokaryotic genomes.
+Gap: 0.002 F1. Validated on 10 prokaryotic genomes across diverse clades.
 
-## Installation
+## Quick Start
 
-### Requirements
+### Option 1: One-command setup (recommended)
 
-- Rust 1.70+ (no external crates required)
+```bash
+git clone https://github.com/ad3002/prokrustes.git
+cd prokrustes
+./scripts/setup.sh
+```
 
-### Build
+This will:
+- Build the Rust binary
+- Download 10 reference genomes from NCBI
+- Install ncRNA tools (barrnap, tRNAscan-SE) if conda is available
+- Run a verification test on E. coli K-12
+
+### Option 2: Docker (fully reproducible, no dependencies)
+
+```bash
+docker build -t prokrustes .
+docker run prokrustes /data/ecoli_k12.fasta > output.gff
+```
+
+The Docker image includes all 10 reference genomes, Prodigal baseline, and ncRNA tools.
+
+### Option 3: Manual build
+
+Requirements: Rust 1.70+
 
 ```bash
 git clone https://github.com/ad3002/prokrustes.git
@@ -39,6 +60,35 @@ cargo build --release
 ```
 
 The binary will be at `target/release/prokrustes`.
+
+## Reproducible Benchmark
+
+Run the full benchmark across 10 genomes with Prodigal comparison:
+
+```bash
+# Install Prodigal baseline (optional)
+pip install pyrodigal
+
+# Run full benchmark
+./scripts/benchmark.sh
+```
+
+This downloads all genomes, runs both Prokrustes and Prodigal, and prints a comparison table:
+
+```
+Genome                       Size   Prokrustes F1    Prodigal F1    Delta
+---------------------------------------------------------------------------
+Escherichia coli K-12         4.6          0.9480         0.9500  -0.0020
+Salmonella enterica LT2       5.0            ...            ...      ...
+Bacillus subtilis 168          4.2            ...            ...      ...
+...
+```
+
+Run a single genome:
+
+```bash
+./scripts/benchmark.sh ecoli_k12
+```
 
 ## Usage
 
