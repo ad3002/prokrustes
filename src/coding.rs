@@ -109,6 +109,71 @@ pub fn build_hex_table(cod: &[u32; N_HEX], ct: u64, ncod: &[u32; N_HEX], nt: u64
     model
 }
 
+/// Cached hex indices for one ORF: (hex_index, frame) pairs.
+pub struct HexCacheEntry {
+    pub indices: Vec<(u16, u8)>, // (hex_index, frame)
+}
+
+/// Pre-computed hex indices for all ORFs on one strand.
+pub struct HexCache {
+    pub entries: Vec<HexCacheEntry>,
+}
+
+impl HexCache {
+    /// Build cache: scan each ORF once, store hex indices + frames.
+    pub fn build(seq: &[u8], orfs: &[Gene]) -> Self {
+        let entries = orfs.iter().map(|orf| {
+            let s = &seq[orf.seq_start..orf.seq_end];
+            let ns = s.len();
+            if ns < 6 {
+                return HexCacheEntry { indices: Vec::new() };
+            }
+            let mut indices = Vec::with_capacity(ns - 5);
+            for i in 0..ns.saturating_sub(5) {
+                if let Some(idx) = hex_enc(&s[i..i+6]) {
+                    indices.push((idx as u16, (i % 3) as u8));
+                }
+            }
+            HexCacheEntry { indices }
+        }).collect();
+        HexCache { entries }
+    }
+
+    /// Rescore all ORFs using cached indices + new model. No sequence access needed.
+    pub fn rescore(&self, orfs: &mut [Gene], model: &HexModel) {
+        for (orf, entry) in orfs.iter_mut().zip(self.entries.iter()) {
+            if entry.indices.is_empty() {
+                orf.hex_avg = 0.0; orf.hex_total = 0.0;
+                orf.frame_bias = 0.0; orf.hex_cov = 0.5;
+                continue;
+            }
+
+            let mut scores = [0.0f64; 3];
+            let mut counts = [0u32; 3];
+            let mut pos_count = 0u32;
+
+            for &(idx, frame) in &entry.indices {
+                let f = frame as usize;
+                scores[f] += model[idx as usize];
+                counts[f] += 1;
+                if f == 0 && model[idx as usize] > 0.0 { pos_count += 1; }
+            }
+
+            let n0 = counts[0];
+            orf.hex_total = scores[0];
+            orf.hex_avg = if n0 > 0 { scores[0] / n0 as f64 } else { 0.0 };
+            orf.hex_cov = if n0 > 0 { pos_count as f64 / n0 as f64 } else { 0.5 };
+
+            let avgs: [f64; 3] = [
+                if counts[0] > 0 { scores[0] / counts[0] as f64 } else { 0.0 },
+                if counts[1] > 0 { scores[1] / counts[1] as f64 } else { 0.0 },
+                if counts[2] > 0 { scores[2] / counts[2] as f64 } else { 0.0 },
+            ];
+            orf.frame_bias = avgs[0] - avgs[1].max(avgs[2]);
+        }
+    }
+}
+
 pub fn score_hex_all(seq: &[u8], orfs: &mut [Gene], model: &HexModel) {
     for orf in orfs.iter_mut() {
         let s = &seq[orf.seq_start..orf.seq_end];

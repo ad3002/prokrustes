@@ -484,6 +484,25 @@ fn score_all_orfs(
     }
 }
 
+/// Fast rescore using cached hex indices — no sequence scanning needed.
+fn score_all_orfs_cached(
+    plus: &mut [Gene], minus: &mut [Gene],
+    hex_cache_p: &crate::coding::HexCache,
+    hex_cache_m: &crate::coding::HexCache,
+    hex_model: &HexModel,
+    gc3_target: f64,
+) {
+    hex_cache_p.rescore(plus, hex_model);
+    hex_cache_m.rescore(minus, hex_model);
+
+    for orf in plus.iter_mut() {
+        orf.score = composite_score(orf, gc3_target);
+    }
+    for orf in minus.iter_mut() {
+        orf.score = composite_score(orf, gc3_target);
+    }
+}
+
 /// Run prediction pipeline: filter → keep_best_starts → operon_boost → weights → DP → gap_fill.
 /// Matches monolith's run_prediction exactly.
 fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec<usize>) {
@@ -793,6 +812,10 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     plus.retain(|o| o.score > 0.05);
     minus.retain(|o| o.score > 0.05);
 
+    // Build hex index cache — scan sequences once, reuse for all re-scoring
+    let hex_cache_p = crate::coding::HexCache::build(genome, &plus);
+    let hex_cache_m = crate::coding::HexCache::build(&rc, &minus);
+
     // 7. Iterative self-training (matches monolith: filter by score, 12 iterations)
     let mut prev_hash: Option<f64> = None;
     for iteration in 0..12 {
@@ -828,7 +851,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
                     }
                 }
 
-                score_all_orfs(&mut plus, &mut minus, genome, &rc, &hex_model, &mono_model, gc3_target, false);
+                score_all_orfs_cached(&mut plus, &mut minus, &hex_cache_p, &hex_cache_m, &hex_model, gc3_target);
             }
         }
 
@@ -863,7 +886,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
 
                 if let Some(igm) = it_model {
                     hex_model = blend_hex(&hex_model, &igm, 0.30);
-                    score_all_orfs(&mut plus, &mut minus, genome, &rc, &hex_model, &mono_model, gc3_target, false);
+                    score_all_orfs_cached(&mut plus, &mut minus, &hex_cache_p, &hex_cache_m, &hex_model, gc3_target);
 
                     // Extra refinement rounds
                     for extra in 0..3 {
@@ -878,7 +901,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
                         let t3m = train_hex_from_set(&rc, &cm, 150);
                         if let Some(new_m) = merge_hex(&t3p, &t3m) {
                             hex_model = blend_hex(&hex_model, &new_m, 0.30 + extra as f64 * 0.05);
-                            score_all_orfs(&mut plus, &mut minus, genome, &rc, &hex_model, &mono_model, gc3_target, false);
+                            score_all_orfs_cached(&mut plus, &mut minus, &hex_cache_p, &hex_cache_m, &hex_model, gc3_target);
                         }
                     }
                 }
