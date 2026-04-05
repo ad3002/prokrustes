@@ -836,9 +836,42 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
         orf.start_ctx = score_start_context(&rc, orf.seq_start);
     }
 
-    // 4. Initial hexamer tables (matching monolith's fallback chain)
-    let t1p = train_hex_initial(genome, &plus, 900, false);
-    let t1m = train_hex_initial(&rc, &minus, 900, false);
+    // 3b. GC frame plot: zero-knowledge coding signal for bootstrap
+    // Scores each ORF by consistency of GC frame bias (wobble position).
+    // In high-GC genomes, this is critical for selecting good training genes.
+    crate::gc_frame::score_all_gc_frame(genome, &mut plus);
+    crate::gc_frame::score_all_gc_frame(&rc, &mut minus);
+
+    // 4. Initial hexamer tables
+    // For high-GC genomes (gc3_target > 0.6), use GC frame to pre-filter
+    // training set — many long ORFs are spurious in high-GC.
+    let gc_prefilter = gc3_target > 0.60;
+    let train_plus: Vec<Gene> = if gc_prefilter {
+        plus.iter().filter(|o| o.length >= 900 && o.is_longest && o.adj_bonus > 0.15).cloned().collect()
+    } else {
+        plus.clone()
+    };
+    let train_minus: Vec<Gene> = if gc_prefilter {
+        minus.iter().filter(|o| o.length >= 900 && o.is_longest && o.adj_bonus > 0.15).cloned().collect()
+    } else {
+        minus.clone()
+    };
+
+    let t1p = if gc_prefilter && !train_plus.is_empty() {
+        train_hex_initial(genome, &train_plus, 600, false)
+    } else {
+        train_hex_initial(genome, &plus, 900, false)
+    };
+    let t1m = if gc_prefilter && !train_minus.is_empty() {
+        train_hex_initial(&rc, &train_minus, 600, false)
+    } else {
+        train_hex_initial(&rc, &minus, 900, false)
+    };
+
+    if gc_prefilter {
+        eprintln!("GC frame bootstrap: {} + {} training ORFs (from {} + {} total)",
+            train_plus.len(), train_minus.len(), plus.len(), minus.len());
+    }
     let initial_hex = merge_hex(&t1p, &t1m).or_else(|| {
         let t2p = train_hex_initial(genome, &plus, 600, false);
         let t2m = train_hex_initial(&rc, &minus, 600, false);
