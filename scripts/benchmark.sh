@@ -86,7 +86,7 @@ download() {
 # --- Run Prodigal on a genome ---
 run_prodigal() {
     local fasta="$1" output="$2"
-    prodigal -i "$fasta" -f gff -p meta -o "$output" 2>/dev/null
+    prodigal -i "$fasta" -f gff -p single -o "$output" 2>/dev/null
 }
 
 # --- Header ---
