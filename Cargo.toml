@@ -1,0 +1,14 @@
+[package]
+name = "prokrustes"
+version = "0.1.0"
+edition = "2021"
+description = "Prokaryotic genome annotation tool with epistemic layering"
+license = "MIT"
+
+[[bin]]
+name = "prokrustes"
+path = "src/main.rs"
+
+[lib]
+name = "prokrustes"
+path = "src/lib.rs"
