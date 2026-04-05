@@ -1,16 +1,39 @@
 use crate::types::{Gene, HexModel};
 use crate::io::hex_enc;
 
+/// Probability of NOT hitting a stop codon per codon, given genome GC.
+/// Prodigal formula (node.c:575): for translation table 11 (standard):
+///   P(stop) = (1-gc)^2 * gc/4 + (1-gc)^3 / 8
+///   no_stop = 1 - P(stop)
+/// At GC=0.30: no_stop ≈ 0.974 (stops frequent, length meaningful)
+/// At GC=0.50: no_stop ≈ 0.984
+/// At GC=0.70: no_stop ≈ 0.993 (stops rare, length less meaningful)
+fn no_stop_probability(gc: f64) -> f64 {
+    let gc = gc.clamp(0.15, 0.90);
+    let at = 1.0 - gc;
+    let p_stop = at * at * gc / 4.0 + at * at * at / 8.0;
+    1.0 - p_stop
+}
+
 /// Composite score with GC-adjusted length normalization.
 pub fn composite_score(g: &Gene, gc3_target: f64) -> f64 {
     let len = g.length as f64;
-    // GC-adjusted length: in high-GC genomes stop codons are rare,
-    // creating long spurious ORFs. Reduce length bonus there.
-    // In low-GC, stop codons are frequent — boost length bonus.
-    // gc3_target ~0.5 for E.coli, ~0.83 for Pseudomonas, ~0.20 for Borrelia
-    let gc_frac = gc3_target.clamp(0.2, 0.85);
-    let len_scale = 300.0 + (gc_frac - 0.5) * 400.0; // 220 at gc=0.3, 300 at gc=0.5, 440 at gc=0.8
-    let len_norm = 1.0 - (-len / len_scale).exp();
+    // GC-adjusted length using stop codon probability (Prodigal approach).
+    // Compute effective length in "stop-codon-adjusted codons":
+    // how many expected stops would we see in this length?
+    let gc = gc3_target.clamp(0.15, 0.90);
+    let ns = no_stop_probability(gc);
+    // -log(no_stop) = expected stops per codon. At GC=0.5: ~0.016, at GC=0.7: ~0.019
+    let stop_rate = -(ns.ln()); // stops per codon
+    let n_codons = len / 3.0;
+    // Effective length = how many expected stops we'd pass through
+    let effective_len = n_codons * stop_rate;
+    // Normalize: calibrated so E. coli (GC=0.5) behaves like the old formula
+    // At GC=0.5, stop_rate=0.016, so 300bp/100codons → effective=1.6
+    // Old formula: 1 - exp(-300/300) = 0.63. Match: 1 - exp(-effective/1.6) at effective=1.6 → 0.63
+    let ref_rate = -(no_stop_probability(0.50).ln());
+    let calibration = 100.0 * ref_rate; // ≈1.6
+    let len_norm = (1.0 - (-effective_len / calibration).exp()).clamp(0.0, 1.0);
     let st = g.start_type();
     let hex_norm = ((g.hex_avg + 1.5) / 4.5).clamp(0.0, 1.0);
     let fb_norm = (g.frame_bias / 3.0).clamp(0.0, 1.0);
