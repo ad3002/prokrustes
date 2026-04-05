@@ -103,7 +103,7 @@ pub fn main_cli() {
     // IS element / repeat family correction (post-annotation)
     crate::is_elements::correct_repeat_families(&genome, &mut genes);
 
-    // Parse --model flag: LightGBM start ranker
+    // Parse --model flag or auto-detect LightGBM start ranker
     let model_path = {
         let mut path = None;
         let mut i = 2;
@@ -113,6 +113,30 @@ pub fn main_cli() {
                 break;
             }
             i += 1;
+        }
+        // Auto-detect model if not specified
+        if path.is_none() {
+            let candidates = [
+                "models/start_ranker.lgb",
+                "start_ranker.lgb",
+                "/opt/prokrustes/models/start_ranker.lgb",
+                "../models/start_ranker.lgb",
+            ];
+            // Also try relative to the binary location
+            let mut all_candidates: Vec<String> = candidates.iter().map(|s| s.to_string()).collect();
+            if let Ok(exe) = std::env::current_exe() {
+                if let Some(dir) = exe.parent() {
+                    all_candidates.push(format!("{}/models/start_ranker.lgb", dir.display()));
+                    all_candidates.push(format!("{}/../models/start_ranker.lgb", dir.display()));
+                }
+            }
+            for candidate in &all_candidates {
+                if std::path::Path::new(candidate).exists() {
+                    eprintln!("Auto-detected model: {}", candidate);
+                    path = Some(candidate.clone());
+                    break;
+                }
+            }
         }
         path
     };
