@@ -202,24 +202,28 @@ echo "  Results (total wall time: ${TOTAL_ELAPSED}s)"
 echo "============================================================"
 echo ""
 
-python3 << 'PYEOF' "$RESULTS_DIR"
-import sys
+BENCH_RESULTS="$RESULTS_DIR" python3 << 'PYEOF'
+import os
 
+results_dir = os.environ["BENCH_RESULTS"]
 results = {}
 order = []
-with open(sys.argv[1] + "/benchmark_summary.tsv") as f:
+with open(results_dir + "/benchmark_summary.tsv") as f:
     header = f.readline()
     for line in f:
-        parts = line.strip().split('\t')
-        if len(parts) < 14:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split('\t')
+        if len(parts) < 4:
             continue
         key, species, size, tool = parts[0], parts[1], parts[2], parts[3]
-        f1, prec, recall = parts[11], parts[9], parts[10]
-        start_acc, time_s = parts[12], parts[13]
+        f1 = parts[11] if len(parts) > 11 else "-"
+        time_s = parts[13] if len(parts) > 13 else "-"
         if key not in results:
             results[key] = {"species": species, "size": size}
             order.append(key)
-        results[key][tool] = {"f1": f1, "prec": prec, "recall": recall, "start_acc": start_acc, "time": time_s}
+        results[key][tool] = {"f1": f1, "time": time_s}
 
 print(f"{'Genome':<30} {'Size':>5}  {'Prokrustes':>11} {'t':>4}  {'Prodigal':>9} {'t':>4}  {'Delta':>7}")
 print("-" * 80)
@@ -234,9 +238,11 @@ for key in order:
     pd_t = pd.get("time", "-")
 
     delta = ""
-    if pk_f1 != "-" and pd_f1 != "-":
-        d = float(pk_f1) - float(pd_f1)
-        delta = f"{d:+.4f}"
+    try:
+        if pk_f1 != "-" and pd_f1 != "-":
+            delta = f"{float(pk_f1) - float(pd_f1):+.4f}"
+    except ValueError:
+        pass
 
     pk_str = f"F1={pk_f1}" if pk_f1 != "-" else "-"
     pd_str = f"F1={pd_f1}" if pd_f1 != "-" else "-"
