@@ -92,16 +92,19 @@ run_one() {
     local size_mb
     size_mb=$(echo "scale=1; $genome_bytes / 1048576" | bc)
 
-    # ncRNA mask
+    # ncRNA mask: try barrnap first, fall back to extracting from reference GFF
     local ncrna_flag=""
-    if command -v barrnap &>/dev/null; then
-        local ncrna_gff="$DATA_DIR/${key}_ncrna.gff"
-        if [ ! -f "$ncrna_gff" ]; then
+    local ncrna_gff="$DATA_DIR/${key}_ncrna.gff"
+    if [ ! -f "$ncrna_gff" ]; then
+        if command -v barrnap &>/dev/null; then
             barrnap "$DATA_DIR/${key}.fasta" > "$ncrna_gff" 2>/dev/null || true
+        elif [ -f "$DATA_DIR/${key}.gff" ]; then
+            # Extract rRNA/tRNA from reference GFF
+            python3 "$SCRIPT_DIR/extract_ncrna.py" "$DATA_DIR/${key}.gff" "$ncrna_gff" 2>/dev/null || true
         fi
-        if [ -s "$ncrna_gff" ]; then
-            ncrna_flag="--ncrna $ncrna_gff"
-        fi
+    fi
+    if [ -s "$ncrna_gff" ]; then
+        ncrna_flag="--ncrna $ncrna_gff"
     fi
 
     # Prokrustes
