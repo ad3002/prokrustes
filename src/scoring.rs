@@ -15,25 +15,10 @@ fn no_stop_probability(gc: f64) -> f64 {
     1.0 - p_stop
 }
 
-/// Composite score with GC-adjusted length normalization.
+/// Composite score.
 pub fn composite_score(g: &Gene, gc3_target: f64) -> f64 {
     let len = g.length as f64;
-    // GC-adjusted length using stop codon probability (Prodigal approach).
-    // Compute effective length in "stop-codon-adjusted codons":
-    // how many expected stops would we see in this length?
-    let gc = gc3_target.clamp(0.15, 0.90);
-    let ns = no_stop_probability(gc);
-    // -log(no_stop) = expected stops per codon. At GC=0.5: ~0.016, at GC=0.7: ~0.019
-    let stop_rate = -(ns.ln()); // stops per codon
-    let n_codons = len / 3.0;
-    // Effective length = how many expected stops we'd pass through
-    let effective_len = n_codons * stop_rate;
-    // Normalize: calibrated so E. coli (GC=0.5) behaves like the old formula
-    // At GC=0.5, stop_rate=0.016, so 300bp/100codons → effective=1.6
-    // Old formula: 1 - exp(-300/300) = 0.63. Match: 1 - exp(-effective/1.6) at effective=1.6 → 0.63
-    let ref_rate = -(no_stop_probability(0.50).ln());
-    let calibration = 100.0 * ref_rate; // ≈1.6
-    let len_norm = (1.0 - (-effective_len / calibration).exp()).clamp(0.0, 1.0);
+    let len_norm = 1.0 - (-len / 300.0).exp();
     let st = g.start_type();
     let hex_norm = ((g.hex_avg + 1.5) / 4.5).clamp(0.0, 1.0);
     let fb_norm = (g.frame_bias / 3.0).clamp(0.0, 1.0);
@@ -86,6 +71,7 @@ pub fn composite_score(g: &Gene, gc3_target: f64) -> f64 {
     score += 0.02 * (g.gc3_bias * 8.0).min(1.0);
     // Start context neural model: used only in keep_best_starts for start selection,
     // NOT in composite scoring (adding it here adds FP without improving F1).
+
     score
 }
 

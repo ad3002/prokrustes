@@ -1,0 +1,11 @@
+=== BASELINE ===
+ecoli_k12: F1=0.9430 (TP=4054 FP=241 FN=249) vs Prodigal=- delta=
+salmonella_lt2: F1=0.9489 (TP=4343 FP=256 FN=212) vs Prodigal=- delta=
+bacillus_subtilis: F1=0.9568 (TP=4079 FP=207 FN=161) vs Prodigal=- delta=
+pseudomonas_aeruginosa: F1=0.9378 (TP=5264 FP=389 FN=309) vs Prodigal=- delta=
+saureus_nctc8325: F1=0.9413 (TP=2581 FP=136 FN=186) vs Prodigal=- delta=
+mycobacterium_tuberculosis: F1=0.8701 (TP=3352 FP=447 FN=554) vs Prodigal=- delta=
+mycoplasma_genitalium: F1=0.9256 (TP=473 FP=45 FN=31) vs Prodigal=- delta=
+synechocystis_pcc6803: F1=0.9238 (TP=3372 FP=293 FN=263) vs Prodigal=- delta=
+bacteroides_fragilis: F1=0.9369 (TP=4059 FP=376 FN=171) vs Prodigal=- delta=
+borrelia_burgdorferi: F1=0.9100 (TP=1340 FP=204 FN=61) vs Prodigal=- delta=
