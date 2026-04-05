@@ -74,8 +74,8 @@ pub fn main_cli() {
         let plus_orfs = crate::orf::find_orfs(&genome, true, genome.len());
         let minus_orfs = crate::orf::find_orfs(&rc_seq, false, genome.len());
         let hex = {
-            let t1p = crate::coding::train_hex_initial(&genome, &plus_orfs, 900, true);
-            let t1m = crate::coding::train_hex_initial(&rc_seq, &minus_orfs, 900, true);
+            let t1p = crate::coding::train_hex_initial(&genome, &plus_orfs, 900, false);
+            let t1m = crate::coding::train_hex_initial(&rc_seq, &minus_orfs, 900, false);
             crate::coding::merge_hex(&t1p, &t1m).unwrap_or([0.0; crate::types::N_HEX])
         };
         let mut genes = crate::viterbi::hmm_gene_finder(&genome, &rc_seq, &hex, &hex, None);
@@ -386,8 +386,8 @@ pub fn annotate_return_all(genome: &[u8]) -> Vec<Gene> {
     }
 
     // Quick hexamer training on long ORFs
-    let t1p = train_hex_initial(genome, &plus, 900, true);
-    let t1m = train_hex_initial(&rc, &minus, 900, true);
+    let t1p = train_hex_initial(genome, &plus, 900, false);
+    let t1m = train_hex_initial(&rc, &minus, 900, false);
     if let Some(hex) = merge_hex(&t1p, &t1m) {
         let gc3_target = 0.5;
         score_hex_all(genome, &mut plus, &hex);
@@ -837,11 +837,11 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     }
 
     // 4. Initial hexamer tables (matching monolith's fallback chain)
-    let t1p = train_hex_initial(genome, &plus, 900, true);
-    let t1m = train_hex_initial(&rc, &minus, 900, true);
+    let t1p = train_hex_initial(genome, &plus, 900, false);
+    let t1m = train_hex_initial(&rc, &minus, 900, false);
     let initial_hex = merge_hex(&t1p, &t1m).or_else(|| {
-        let t2p = train_hex_initial(genome, &plus, 600, true);
-        let t2m = train_hex_initial(&rc, &minus, 600, true);
+        let t2p = train_hex_initial(genome, &plus, 600, false);
+        let t2m = train_hex_initial(&rc, &minus, 600, false);
         merge_hex(&t2p, &t2m)
     });
 
