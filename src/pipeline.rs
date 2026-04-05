@@ -1423,6 +1423,36 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     output.sort_by_key(|g| g.start);
     output.dedup_by(|a, b| a.start == b.start && a.end == b.end && a.is_plus == b.is_plus);
 
+    // 16b. Low-confidence filter: remove genes with weak evidence
+    // Real genes should have multiple supporting signals.
+    // Spurious ORFs often pass one threshold but lack other signals.
+    let before_filter = output.len();
+    output.retain(|g| {
+        // Count positive signals
+        let mut signals = 0u32;
+        if g.hex_avg > 0.05 { signals += 1; }     // positive coding potential
+        if g.rbs > 0.25 { signals += 1; }          // decent RBS
+        if g.frame_bias > 0.10 { signals += 1; }   // frame bias indicates coding
+        if g.length >= 300 { signals += 1; }        // reasonable length
+        if g.is_longest { signals += 1; }           // longest ORF in stop group
+        if g.gc3_bias > 0.05 { signals += 1; }     // wobble position bias
+
+        // Long genes (>600bp) are almost always real — keep them
+        if g.length >= 600 { return true; }
+
+        // Short genes (<300bp) need stronger evidence
+        if g.length < 300 {
+            return signals >= 3;
+        }
+
+        // Medium genes (300-600bp) need moderate evidence
+        signals >= 2
+    });
+    let removed = before_filter - output.len();
+    if removed > 0 {
+        eprintln!("Low-confidence filter: {} genes removed", removed);
+    }
+
     // 17. Pseudogene detection — DISABLED
     // Tested 3 methods: frameshift, readthrough, fragment clustering.
     // All methods kill more TP than FP (ratio 5:1 to 8:1).
