@@ -118,10 +118,22 @@ for entry in "${GENOMES[@]}"; do
     GENOME_BYTES=$(wc -c < "$DATA_DIR/${key}.fasta" | tr -d ' ')
     SIZE_MB=$(echo "scale=1; $GENOME_BYTES / 1048576" | bc)
 
+    # --- Generate ncRNA mask if barrnap available ---
+    NCRNA_FLAG=""
+    if command -v barrnap &>/dev/null; then
+        NCRNA_GFF="$DATA_DIR/${key}_ncrna.gff"
+        if [ ! -f "$NCRNA_GFF" ]; then
+            barrnap "$DATA_DIR/${key}.fasta" > "$NCRNA_GFF" 2>/dev/null || true
+        fi
+        if [ -s "$NCRNA_GFF" ]; then
+            NCRNA_FLAG="--ncrna $NCRNA_GFF"
+        fi
+    fi
+
     # --- Prokrustes ---
     echo "  [Prokrustes] Annotating ($SIZE_MB Mb)..."
     START_TIME=$SECONDS
-    "$BINARY" "$DATA_DIR/${key}.fasta" > "$RESULTS_DIR/${key}_prokrustes.gff" 2> "$RESULTS_DIR/${key}_prokrustes_stderr.log"
+    $BINARY "$DATA_DIR/${key}.fasta" $NCRNA_FLAG > "$RESULTS_DIR/${key}_prokrustes.gff" 2> "$RESULTS_DIR/${key}_prokrustes_stderr.log"
     ELAPSED=$((SECONDS - START_TIME))
 
     EVAL_PK=$(python3 "$SCRIPT_DIR/evaluate.py" "$RESULTS_DIR/${key}_prokrustes.gff" "$DATA_DIR/${key}.gff" --tsv)
