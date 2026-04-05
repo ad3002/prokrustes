@@ -836,47 +836,44 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
         orf.start_ctx = score_start_context(&rc, orf.seq_start);
     }
 
-    // 3b. GC frame plot: zero-knowledge coding signal for bootstrap
-    // Scores each ORF by consistency of GC frame bias (wobble position).
-    // In high-GC genomes, this is critical for selecting good training genes.
+    // 3b. GC frame plot: frame-aware zero-knowledge coding signal
     crate::gc_frame::score_all_gc_frame(genome, &mut plus);
     crate::gc_frame::score_all_gc_frame(&rc, &mut minus);
 
-    // 4. Initial hexamer tables
-    // For high-GC genomes (gc3_target > 0.6), use GC frame to pre-filter
-    // training set — many long ORFs are spurious in high-GC.
-    let gc_prefilter = gc3_target > 0.60;
-    let train_plus: Vec<Gene> = if gc_prefilter {
-        plus.iter().filter(|o| o.length >= 900 && o.is_longest && o.adj_bonus > 0.15).cloned().collect()
-    } else {
-        plus.clone()
-    };
-    let train_minus: Vec<Gene> = if gc_prefilter {
-        minus.iter().filter(|o| o.length >= 900 && o.is_longest && o.adj_bonus > 0.15).cloned().collect()
-    } else {
-        minus.clone()
-    };
+    // 4. Initial hexamer training — two strategies based on GC content
+    let gc_prefilter = gc3_target > 0.55;
 
-    let t1p = if gc_prefilter && !train_plus.is_empty() {
-        train_hex_initial(genome, &train_plus, 600, false)
-    } else {
-        train_hex_initial(genome, &plus, 900, false)
-    };
-    let t1m = if gc_prefilter && !train_minus.is_empty() {
-        train_hex_initial(&rc, &train_minus, 600, false)
-    } else {
-        train_hex_initial(&rc, &minus, 900, false)
-    };
+    let initial_hex = if gc_prefilter {
+        // HIGH-GC BOOTSTRAP: initial DP using only length + GC frame (no hexamers).
+        // Selects a clean set of likely-real genes, then trains hexamers on them.
+        // This prevents hexamer model from being contaminated by spurious long ORFs.
+        let mut all_for_dp: Vec<Gene> = plus.iter().chain(minus.iter()).cloned().collect();
+        let selected_indices = crate::gc_frame::gc_frame_select(&all_for_dp, gc3_target);
 
-    if gc_prefilter {
-        eprintln!("GC frame bootstrap: {} + {} training ORFs (from {} + {} total)",
-            train_plus.len(), train_minus.len(), plus.len(), minus.len());
-    }
-    let initial_hex = merge_hex(&t1p, &t1m).or_else(|| {
-        let t2p = train_hex_initial(genome, &plus, 600, false);
-        let t2m = train_hex_initial(&rc, &minus, 600, false);
-        merge_hex(&t2p, &t2m)
-    });
+        let training_genes: Vec<Gene> = selected_indices.iter()
+            .map(|&i| all_for_dp[i].clone())
+            .collect();
+
+        let train_p: Vec<Gene> = training_genes.iter().filter(|g| g.is_plus).cloned().collect();
+        let train_m: Vec<Gene> = training_genes.iter().filter(|g| !g.is_plus).cloned().collect();
+
+        eprintln!("GC frame bootstrap: {} genes selected ({} +, {} -) from {} total ORFs",
+            training_genes.len(), train_p.len(), train_m.len(),
+            plus.len() + minus.len());
+
+        let t1p = train_hex_from_set(genome, &train_p, 150);
+        let t1m = train_hex_from_set(&rc, &train_m, 150);
+        merge_hex(&t1p, &t1m)
+    } else {
+        // STANDARD: train from long ORFs directly (works for balanced GC)
+        let t1p = train_hex_initial(genome, &plus, 900, false);
+        let t1m = train_hex_initial(&rc, &minus, 900, false);
+        merge_hex(&t1p, &t1m).or_else(|| {
+            let t2p = train_hex_initial(genome, &plus, 600, false);
+            let t2m = train_hex_initial(&rc, &minus, 600, false);
+            merge_hex(&t2p, &t2m)
+        })
+    };
 
     let mut hex_model = match initial_hex {
         Some(m) => m,
@@ -884,7 +881,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
             // Emergency fallback
             let all: Vec<Gene> = plus.into_iter().chain(minus.into_iter()).collect();
             let mut result: Vec<Gene> = all.iter()
-                .filter(|o| o.length >= 300 && o.is_longest && o.is_atg())
+                .filter(|o| o.length >= 300 && o.is_longest)
                 .cloned().collect();
             result.sort_by_key(|g| g.start);
             return (result, all);

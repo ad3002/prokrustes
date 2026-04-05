@@ -113,11 +113,127 @@ pub fn detect_genetic_code(seq: &[u8]) -> GeneticCode {
     eprintln!("  Code detection: median ORF standard={}bp, code4={}bp, ratio={:.2}",
         median_std as usize, median_c4 as usize, ratio);
 
-    if ratio > 1.40 {
+    // Code 4 detection: Mycoplasma/Spiroplasma use TGA as Trp, not stop.
+    //
+    // Key insight: in code-4 genomes, the LONGEST ORFs found under code-4
+    // contain many in-frame TGA codons (used as Trp). In standard-code
+    // genomes, code-4 ORFs are just artifacts where TGA happens to be absent.
+    //
+    // Test: among the longest code-4 ORFs, count in-frame TGA per 1000 codons.
+    // Code-4 genome: high TGA density (TGA is a normal Trp codon, ~1-2%)
+    // Standard genome high-GC: low TGA density (TGA is rare because AT-rich)
+    // Standard genome normal: moderate TGA density (absent by construction of code-4 ORFs)
+    // Simple and robust: code 4 organisms (Mycoplasma, Spiroplasma) are
+    // ALWAYS low-GC (25-35%). No known high-GC organism uses code 4.
+    // The length ratio inflates at high GC because TGA is AT-rich and rare.
+    // So: require low GC + significant length ratio.
+    let gc = {
+        let gc_count = seq.iter().filter(|&&b| b == b'G' || b == b'C').count();
+        gc_count as f64 / n as f64
+    };
+    eprintln!("  Genome GC={:.1}%, ratio={:.2}", gc * 100.0, ratio);
+
+    if ratio > 1.20 && gc < 0.38 {
         GeneticCode::Code4
     } else {
         GeneticCode::Standard
     }
+}
+
+/// Count in-frame TGA density inside the longest code-4 ORFs.
+/// Returns TGA per codon. In code-4 genomes TGA is Trp (~1-2% of codons).
+/// In standard genomes, code-4 ORFs exist because TGA is absent → density ~0.
+fn count_inframe_tga_density(seq: &[u8], sorted_lens: &[usize], code: GeneticCode) -> f64 {
+    if sorted_lens.is_empty() { return 0.0; }
+
+    // Use top 50 longest ORFs
+    let cutoff_idx = sorted_lens.len().saturating_sub(50);
+    let min_len = sorted_lens[cutoff_idx];
+    let n = seq.len();
+
+    let mut tga_count = 0u64;
+    let mut total_codons = 0u64;
+
+    for frame in 0..3usize {
+        let mut orf_start: Option<usize> = None;
+        let mut i = frame;
+        while i + 3 <= n {
+            let codon = &seq[i..i + 3];
+            if orf_start.is_none() && is_start(codon) {
+                orf_start = Some(i);
+            }
+            if let Some(start) = orf_start {
+                if is_stop_code(codon, code) {
+                    let len = i - start;
+                    if len >= min_len {
+                        // Count TGA inside this ORF (excluding the stop itself)
+                        let mut j = start;
+                        while j < i {
+                            if &seq[j..j + 3] == b"TGA" {
+                                tga_count += 1;
+                            }
+                            total_codons += 1;
+                            j += 3;
+                        }
+                    }
+                    orf_start = None;
+                }
+            }
+            i += 3;
+        }
+    }
+
+    if total_codons > 0 { tga_count as f64 / total_codons as f64 } else { 0.0 }
+}
+
+/// Count stop codon usage among the longest ORFs (by sorted lengths).
+/// Takes the pre-computed sorted lengths to determine a length threshold
+/// (top 100 or top 25%), then counts stop types above that threshold.
+fn count_stop_usage_top(seq: &[u8], sorted_lens: &[usize]) -> (u32, u32, u32) {
+    if sorted_lens.is_empty() {
+        return (0, 0, 0);
+    }
+    // Use the top 100 longest ORFs or top 25%, whichever gives more
+    let cutoff_idx = sorted_lens.len().saturating_sub(100).min(sorted_lens.len() * 3 / 4);
+    let min_orf_len = sorted_lens[cutoff_idx];
+    count_stop_usage(seq, min_orf_len)
+}
+
+/// Count which stop codons terminate long ORFs (standard code).
+/// Returns (TAA_count, TAG_count, TGA_count).
+fn count_stop_usage(seq: &[u8], min_orf_len: usize) -> (u32, u32, u32) {
+    let n = seq.len();
+    let mut n_taa = 0u32;
+    let mut n_tag = 0u32;
+    let mut n_tga = 0u32;
+
+    for frame in 0..3usize {
+        let mut orf_start: Option<usize> = None;
+        let mut i = frame;
+        while i + 3 <= n {
+            let codon = &seq[i..i+3];
+            if orf_start.is_none() && is_start(codon) {
+                orf_start = Some(i);
+            }
+            if let Some(start) = orf_start {
+                if is_stop_code(codon, GeneticCode::Standard) {
+                    let len = i - start;
+                    if len >= min_orf_len {
+                        match codon {
+                            b"TAA" => n_taa += 1,
+                            b"TAG" => n_tag += 1,
+                            b"TGA" => n_tga += 1,
+                            _ => {}
+                        }
+                    }
+                    orf_start = None;
+                }
+            }
+            i += 3;
+        }
+    }
+
+    (n_taa, n_tag, n_tga)
 }
 
 /// Get sorted lengths of the N longest ORFs under a given genetic code.
