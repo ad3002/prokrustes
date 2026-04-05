@@ -24,7 +24,10 @@ pub fn composite_score(g: &Gene, gc3_target: f64) -> f64 {
     let rbs_pwm_norm = ((g.rbs_pwm + 3.0) / 13.0).clamp(0.0, 1.0);
     let rbs_combined = g.rbs.max(rbs_pwm_norm * 0.85);
 
-    let at_bonus = ((g.upstream_at - 0.45) * 0.25).clamp(0.0, 0.10);
+    // Upstream AT bonus: promoter regions are AT-rich relative to genome background.
+    // Normalize by genome GC: compare upstream_at vs expected AT = (1 - gc3_target).
+    let genome_at = 1.0 - gc3_target.clamp(0.2, 0.85);
+    let at_bonus = ((g.upstream_at - genome_at) * 0.5).clamp(0.0, 0.10);
     let longest_bonus = if g.is_longest { 0.06 } else { 0.0 };
 
     // ML-informed weights (logistic regression on 192K ORFs):
