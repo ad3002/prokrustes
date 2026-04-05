@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Prokrustes — full reproducible benchmark with Prodigal baseline
-# Downloads 10 prokaryotic genomes, annotates each with Prokrustes and Prodigal,
-# evaluates F1 for both, prints comparison table.
+# Prokrustes — parallel benchmark with Prodigal baseline
+# Runs all genomes in parallel (one per core), then prints comparison table.
 #
 # Usage:
-#   ./scripts/benchmark.sh                  # all genomes
+#   ./scripts/benchmark.sh                  # all genomes, parallel
 #   ./scripts/benchmark.sh ecoli_k12        # single genome
 #   ./scripts/benchmark.sh --no-prodigal    # skip Prodigal baseline
 
@@ -15,12 +14,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Auto-detect Docker vs local environment
 if [ -f /usr/local/bin/prokrustes ] && [ -d /data ]; then
-    # Docker
     DATA_DIR="/data"
     RESULTS_DIR="/results"
     BINARY="/usr/local/bin/prokrustes"
 else
-    # Local
     DATA_DIR="$PROJECT_DIR/data"
     RESULTS_DIR="$PROJECT_DIR/results"
     BINARY="$PROJECT_DIR/target/release/prokrustes"
@@ -29,7 +26,6 @@ fi
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 
 # --- Genome registry ---
-# Format: key|label|fasta_url|gff_url
 GENOMES=(
     "ecoli_k12|Escherichia coli K-12 MG1655|https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz|https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.gff.gz"
     "salmonella_lt2|Salmonella enterica LT2|https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/945/GCF_000006945.2_ASM694v2/GCF_000006945.2_ASM694v2_genomic.fna.gz|https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/945/GCF_000006945.2_ASM694v2/GCF_000006945.2_ASM694v2_genomic.gff.gz"
@@ -55,27 +51,19 @@ for arg in "$@"; do
 done
 
 # --- Check Prodigal ---
-PRODIGAL_BIN=""
-if $RUN_PRODIGAL; then
-    if command -v prodigal &>/dev/null; then
-        PRODIGAL_BIN="prodigal"
-    else
-        echo "NOTE: Prodigal not found."
-        echo "      Install: conda install -c bioconda prodigal"
-        echo "      Or:      apt install prodigal"
-        echo "      Running without baseline comparison."
-        echo ""
-        RUN_PRODIGAL=false
-    fi
+if $RUN_PRODIGAL && ! command -v prodigal &>/dev/null; then
+    echo "NOTE: Prodigal not found. Install: conda install -c bioconda prodigal"
+    echo "      Running without baseline comparison."
+    echo ""
+    RUN_PRODIGAL=false
 fi
 
-# --- Build Prokrustes if needed ---
+# --- Build if needed ---
 if [ ! -f "$BINARY" ]; then
     echo "Building prokrustes (release)..."
     cd "$PROJECT_DIR" && cargo build --release 2>&1 | tail -3
 fi
 
-# --- Download helper ---
 download() {
     local url="$1" dest="$2"
     if [ ! -f "$dest" ]; then
@@ -83,123 +71,182 @@ download() {
     fi
 }
 
-# --- Run Prodigal on a genome ---
-run_prodigal() {
-    local fasta="$1" output="$2"
-    prodigal -i "$fasta" -f gff -p single -o "$output" 2>/dev/null
+# --- Download all data first (sequential, fast) ---
+echo "Downloading reference genomes..."
+for entry in "${GENOMES[@]}"; do
+    IFS='|' read -r key label fasta_url gff_url <<< "$entry"
+    if [ -n "$FILTER" ] && [ "$FILTER" != "$key" ]; then continue; fi
+    download "$fasta_url" "$DATA_DIR/${key}.fasta"
+    download "$gff_url" "$DATA_DIR/${key}.gff"
+done
+echo "Done."
+echo ""
+
+# --- Worker function: annotate + evaluate one genome ---
+run_one() {
+    local key="$1" label="$2"
+    local log="$RESULTS_DIR/${key}.log"
+
+    local genome_bytes
+    genome_bytes=$(wc -c < "$DATA_DIR/${key}.fasta" | tr -d ' ')
+    local size_mb
+    size_mb=$(echo "scale=1; $genome_bytes / 1048576" | bc)
+
+    # ncRNA mask
+    local ncrna_flag=""
+    if command -v barrnap &>/dev/null; then
+        local ncrna_gff="$DATA_DIR/${key}_ncrna.gff"
+        if [ ! -f "$ncrna_gff" ]; then
+            barrnap "$DATA_DIR/${key}.fasta" > "$ncrna_gff" 2>/dev/null || true
+        fi
+        if [ -s "$ncrna_gff" ]; then
+            ncrna_flag="--ncrna $ncrna_gff"
+        fi
+    fi
+
+    # Prokrustes
+    local pk_start=$SECONDS
+    $BINARY "$DATA_DIR/${key}.fasta" $ncrna_flag > "$RESULTS_DIR/${key}_prokrustes.gff" 2> "$RESULTS_DIR/${key}_prokrustes_stderr.log"
+    local pk_time=$((SECONDS - pk_start))
+
+    local eval_pk
+    eval_pk=$(python3 "$SCRIPT_DIR/evaluate.py" "$RESULTS_DIR/${key}_prokrustes.gff" "$DATA_DIR/${key}.gff" --tsv)
+    local f1_pk
+    f1_pk=$(echo "$eval_pk" | cut -f8)
+
+    # Write per-genome result
+    echo -e "${key}\t${label}\t${size_mb}\tProkrustes\t${eval_pk}\t${pk_time}" >> "$RESULTS_DIR/${key}_results.tsv"
+
+    # Prodigal
+    if $RUN_PRODIGAL; then
+        local pd_start=$SECONDS
+        prodigal -i "$DATA_DIR/${key}.fasta" -f gff -p single -o "$RESULTS_DIR/${key}_prodigal.gff" 2>/dev/null
+        local pd_time=$((SECONDS - pd_start))
+
+        local eval_pd
+        eval_pd=$(python3 "$SCRIPT_DIR/evaluate.py" "$RESULTS_DIR/${key}_prodigal.gff" "$DATA_DIR/${key}.gff" --tsv)
+        local f1_pd
+        f1_pd=$(echo "$eval_pd" | cut -f8)
+
+        echo -e "${key}\t${label}\t${size_mb}\tProdigal\t${eval_pd}\t${pd_time}" >> "$RESULTS_DIR/${key}_results.tsv"
+        echo "  done: $label — Prokrustes F1=$f1_pk (${pk_time}s) | Prodigal F1=$f1_pd (${pd_time}s)"
+    else
+        echo "  done: $label — Prokrustes F1=$f1_pk (${pk_time}s)"
+    fi
 }
 
 # --- Header ---
+NCORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 echo "============================================================"
-echo "  Prokrustes Benchmark Suite"
+echo "  Prokrustes Benchmark Suite (parallel, $NCORES cores)"
 echo "============================================================"
 if $RUN_PRODIGAL; then
-    echo "  Baseline: $PRODIGAL_BIN"
+    echo "  Baseline: prodigal -p single"
 fi
 echo ""
 
-# --- Summary files ---
-SUMMARY="$RESULTS_DIR/benchmark_summary.tsv"
-echo -e "Genome\tSpecies\tSize_Mb\tTool\tRef_CDS\tPred_CDS\tTP\tFP\tFN\tPrecision\tRecall\tF1\tStart_Acc" > "$SUMMARY"
+# Clean per-genome result files
+for entry in "${GENOMES[@]}"; do
+    IFS='|' read -r key label fasta_url gff_url <<< "$entry"
+    rm -f "$RESULTS_DIR/${key}_results.tsv"
+done
+
+# --- Launch all genomes in parallel ---
+TOTAL_START=$SECONDS
+PIDS=()
 
 for entry in "${GENOMES[@]}"; do
     IFS='|' read -r key label fasta_url gff_url <<< "$entry"
+    if [ -n "$FILTER" ] && [ "$FILTER" != "$key" ]; then continue; fi
 
-    if [ -n "$FILTER" ] && [ "$FILTER" != "$key" ]; then
-        continue
+    run_one "$key" "$label" &
+    PIDS+=($!)
+
+    # Limit parallelism to NCORES
+    while [ ${#PIDS[@]} -ge "$NCORES" ]; do
+        # Wait for any one to finish
+        for i in "${!PIDS[@]}"; do
+            if ! kill -0 "${PIDS[$i]}" 2>/dev/null; then
+                wait "${PIDS[$i]}" || true
+                unset 'PIDS[$i]'
+            fi
+        done
+        PIDS=("${PIDS[@]}")
+        sleep 0.1
+    done
+done
+
+# Wait for remaining
+for pid in "${PIDS[@]}"; do
+    wait "$pid" || true
+done
+
+TOTAL_ELAPSED=$((SECONDS - TOTAL_START))
+
+# --- Merge results ---
+SUMMARY="$RESULTS_DIR/benchmark_summary.tsv"
+echo -e "Genome\tSpecies\tSize_Mb\tTool\tRef_CDS\tPred_CDS\tTP\tFP\tFN\tPrecision\tRecall\tF1\tStart_Acc\tTime_s" > "$SUMMARY"
+
+for entry in "${GENOMES[@]}"; do
+    IFS='|' read -r key label fasta_url gff_url <<< "$entry"
+    if [ -n "$FILTER" ] && [ "$FILTER" != "$key" ]; then continue; fi
+    if [ -f "$RESULTS_DIR/${key}_results.tsv" ]; then
+        cat "$RESULTS_DIR/${key}_results.tsv" >> "$SUMMARY"
     fi
-
-    echo "--- $label ---"
-
-    # Download
-    download "$fasta_url" "$DATA_DIR/${key}.fasta"
-    download "$gff_url" "$DATA_DIR/${key}.gff"
-
-    GENOME_BYTES=$(wc -c < "$DATA_DIR/${key}.fasta" | tr -d ' ')
-    SIZE_MB=$(echo "scale=1; $GENOME_BYTES / 1048576" | bc)
-
-    # --- Generate ncRNA mask if barrnap available ---
-    NCRNA_FLAG=""
-    if command -v barrnap &>/dev/null; then
-        NCRNA_GFF="$DATA_DIR/${key}_ncrna.gff"
-        if [ ! -f "$NCRNA_GFF" ]; then
-            barrnap "$DATA_DIR/${key}.fasta" > "$NCRNA_GFF" 2>/dev/null || true
-        fi
-        if [ -s "$NCRNA_GFF" ]; then
-            NCRNA_FLAG="--ncrna $NCRNA_GFF"
-        fi
-    fi
-
-    # --- Prokrustes ---
-    echo "  [Prokrustes] Annotating ($SIZE_MB Mb)..."
-    START_TIME=$SECONDS
-    $BINARY "$DATA_DIR/${key}.fasta" $NCRNA_FLAG > "$RESULTS_DIR/${key}_prokrustes.gff" 2> "$RESULTS_DIR/${key}_prokrustes_stderr.log"
-    ELAPSED=$((SECONDS - START_TIME))
-
-    EVAL_PK=$(python3 "$SCRIPT_DIR/evaluate.py" "$RESULTS_DIR/${key}_prokrustes.gff" "$DATA_DIR/${key}.gff" --tsv)
-    F1_PK=$(echo "$EVAL_PK" | cut -f8)
-    echo "  [Prokrustes] F1=$F1_PK  (${ELAPSED}s)"
-    echo -e "${key}\t${label}\t${SIZE_MB}\tProkrustes\t${EVAL_PK}" >> "$SUMMARY"
-
-    # --- Prodigal ---
-    if $RUN_PRODIGAL; then
-        echo "  [Prodigal]   Annotating..."
-        START_TIME=$SECONDS
-        run_prodigal "$DATA_DIR/${key}.fasta" "$RESULTS_DIR/${key}_prodigal.gff"
-        ELAPSED=$((SECONDS - START_TIME))
-
-        EVAL_PD=$(python3 "$SCRIPT_DIR/evaluate.py" "$RESULTS_DIR/${key}_prodigal.gff" "$DATA_DIR/${key}.gff" --tsv)
-        F1_PD=$(echo "$EVAL_PD" | cut -f8)
-        echo "  [Prodigal]   F1=$F1_PD  (${ELAPSED}s)"
-        echo -e "${key}\t${label}\t${SIZE_MB}\tProdigal\t${EVAL_PD}" >> "$SUMMARY"
-    fi
-
-    echo ""
 done
 
 # --- Print summary table ---
+echo ""
 echo "============================================================"
-echo "  Summary"
+echo "  Results (total wall time: ${TOTAL_ELAPSED}s)"
 echo "============================================================"
 echo ""
 
-# Pretty-print comparison
-python3 << 'PYEOF'
+python3 << 'PYEOF' "$RESULTS_DIR"
 import sys
 
 results = {}
-with open("RESULTS_DIR/benchmark_summary.tsv".replace("RESULTS_DIR", sys.argv[1])) as f:
+order = []
+with open(sys.argv[1] + "/benchmark_summary.tsv") as f:
     header = f.readline()
     for line in f:
         parts = line.strip().split('\t')
-        if len(parts) < 13:
+        if len(parts) < 14:
             continue
         key, species, size, tool = parts[0], parts[1], parts[2], parts[3]
         f1, prec, recall = parts[11], parts[9], parts[10]
-        start_acc = parts[12]
+        start_acc, time_s = parts[12], parts[13]
         if key not in results:
             results[key] = {"species": species, "size": size}
-        results[key][tool] = {"f1": f1, "prec": prec, "recall": recall, "start_acc": start_acc}
+            order.append(key)
+        results[key][tool] = {"f1": f1, "prec": prec, "recall": recall, "start_acc": start_acc, "time": time_s}
 
-print(f"{'Genome':<28} {'Size':>5}  {'Prokrustes F1':>14}  {'Prodigal F1':>12}  {'Delta':>7}")
-print("-" * 75)
+print(f"{'Genome':<30} {'Size':>5}  {'Prokrustes':>11} {'t':>4}  {'Prodigal':>9} {'t':>4}  {'Delta':>7}")
+print("-" * 80)
 
-for key, data in results.items():
+for key in order:
+    data = results[key]
     pk = data.get("Prokrustes", {})
     pd = data.get("Prodigal", {})
     pk_f1 = pk.get("f1", "-")
     pd_f1 = pd.get("f1", "-")
+    pk_t = pk.get("time", "-")
+    pd_t = pd.get("time", "-")
 
     delta = ""
     if pk_f1 != "-" and pd_f1 != "-":
         d = float(pk_f1) - float(pd_f1)
         delta = f"{d:+.4f}"
 
-    print(f"{data['species'][:28]:<28} {data['size']:>5}  {pk_f1:>14}  {pd_f1:>12}  {delta:>7}")
+    pk_str = f"F1={pk_f1}" if pk_f1 != "-" else "-"
+    pd_str = f"F1={pd_f1}" if pd_f1 != "-" else "-"
+    pk_t_str = f"{pk_t}s" if pk_t != "-" else "-"
+    pd_t_str = f"{pd_t}s" if pd_t != "-" else "-"
+
+    print(f"{data['species'][:30]:<30} {data['size']:>5}  {pk_str:>11} {pk_t_str:>4}  {pd_str:>9} {pd_t_str:>4}  {delta:>7}")
 
 print()
 PYEOF
-"$RESULTS_DIR"
 
 echo "Full results: $RESULTS_DIR/"
 echo "Summary TSV:  $SUMMARY"
