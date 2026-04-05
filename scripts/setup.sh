@@ -70,10 +70,16 @@ download \
 # --- 3. Install bioinformatics tools (optional) ---
 if [[ "${1:-}" != "--no-bio" ]]; then
     echo ""
-    echo "[3/4] Installing ncRNA annotation tools..."
+    echo "[3/4] Installing bioinformatics tools..."
 
     if command -v conda &>/dev/null || command -v mamba &>/dev/null; then
         CONDA_CMD=$(command -v mamba || command -v conda)
+        if ! command -v prodigal &>/dev/null; then
+            echo "  Installing prodigal via $CONDA_CMD..."
+            $CONDA_CMD install -y -c bioconda prodigal 2>&1 | tail -1
+        else
+            echo "  prodigal — already installed"
+        fi
         if ! command -v barrnap &>/dev/null; then
             echo "  Installing barrnap via $CONDA_CMD..."
             $CONDA_CMD install -y -c bioconda barrnap 2>&1 | tail -1
@@ -87,8 +93,8 @@ if [[ "${1:-}" != "--no-bio" ]]; then
             echo "  tRNAscan-SE — already installed"
         fi
     else
-        echo "  conda/mamba not found — skipping ncRNA tools"
-        echo "  Install manually: conda install -c bioconda barrnap trnascan-se"
+        echo "  conda/mamba not found — skipping bio tools"
+        echo "  Install manually: conda install -c bioconda prodigal barrnap trnascan-se"
     fi
 
     # Generate ncRNA annotations if tools available

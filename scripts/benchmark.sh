@@ -49,10 +49,10 @@ PRODIGAL_BIN=""
 if $RUN_PRODIGAL; then
     if command -v prodigal &>/dev/null; then
         PRODIGAL_BIN="prodigal"
-    elif command -v pyrodigal &>/dev/null; then
-        PRODIGAL_BIN="pyrodigal"
     else
-        echo "NOTE: Prodigal not found. Install: pip install pyrodigal"
+        echo "NOTE: Prodigal not found."
+        echo "      Install: conda install -c bioconda prodigal"
+        echo "      Or:      apt install prodigal"
         echo "      Running without baseline comparison."
         echo ""
         RUN_PRODIGAL=false
@@ -76,36 +76,7 @@ download() {
 # --- Run Prodigal on a genome ---
 run_prodigal() {
     local fasta="$1" output="$2"
-    if [ "$PRODIGAL_BIN" = "pyrodigal" ]; then
-        python3 -c "
-import pyrodigal, sys
-orf_finder = pyrodigal.GeneFinder(meta=True)
-seqs = []
-name = ''
-with open('$fasta') as f:
-    seq_parts = []
-    for line in f:
-        if line.startswith('>'):
-            if seq_parts:
-                seqs.append((name, ''.join(seq_parts)))
-            name = line[1:].strip().split()[0]
-            seq_parts = []
-        else:
-            seq_parts.append(line.strip())
-    if seq_parts:
-        seqs.append((name, ''.join(seq_parts)))
-
-with open('$output', 'w') as out:
-    out.write('##gff-version 3\n')
-    for seqid, seq in seqs:
-        genes = orf_finder.find_genes(seq.encode())
-        for i, gene in enumerate(genes):
-            strand = '+' if gene.strand == 1 else '-'
-            out.write(f'{seqid}\tpyrodigal\tCDS\t{gene.begin}\t{gene.end}\t{gene.score:.1f}\t{strand}\t0\tID=prodigal_{i}\n')
-" 2>/dev/null
-    else
-        prodigal -i "$fasta" -o /dev/null -f gff -p meta > "$output" 2>/dev/null
-    fi
+    prodigal -i "$fasta" -f gff -p meta -o "$output" 2>/dev/null
 }
 
 # --- Header ---

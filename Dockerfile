@@ -18,8 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     hmmer \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pyrodigal (Prodigal baseline) and barrnap
-RUN pip3 install --break-system-packages pyrodigal
+# Install Prodigal (baseline gene finder)
+RUN curl -sL https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux -o /usr/local/bin/prodigal \
+    && chmod +x /usr/local/bin/prodigal
 
 # Install barrnap
 RUN curl -sL https://github.com/tseemann/barrnap/archive/refs/tags/0.9.tar.gz | tar xz -C /opt \

@@ -67,7 +67,8 @@ Run the full benchmark across 10 genomes with Prodigal comparison:
 
 ```bash
 # Install Prodigal baseline (optional)
-pip install pyrodigal
+conda install -c bioconda prodigal
+# or: apt install prodigal
 
 # Run full benchmark
 ./scripts/benchmark.sh
