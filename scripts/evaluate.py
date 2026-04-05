@@ -35,12 +35,19 @@ def parse_prediction_gff(path):
 def parse_reference_gff(path):
     """Parse reference CDS from NCBI GFF3.
 
-    NCBI GFF has multiple CDS rows per gene (one per protein/exon).
-    We deduplicate by taking unique (start, end, strand) tuples.
-    We also skip pseudogenes and non-protein-coding features.
+    We compare CDS to CDS — not gene to CDS — because:
+    - Prokrustes predicts CDS (start codon to stop codon)
+    - NCBI 'gene' entries may include UTRs and be longer
+    - CDS entries are the actual coding sequences
+
+    Deduplicates by (start, end, strand) to handle multiple
+    protein products per locus. Skips pseudogenes.
     """
-    genes = []
+    cds_list = []
     seen = set()
+    # Track parent gene pseudo status
+    pseudo_genes = set()
+
     with open(path) as f:
         for line in f:
             if line.startswith('#'):
@@ -48,33 +55,42 @@ def parse_reference_gff(path):
             fields = line.strip().split('\t')
             if len(fields) < 9:
                 continue
-            # Use 'gene' type for NCBI reference — one per locus
-            # Fall back to 'CDS' if no 'gene' entries found
-            if fields[2] not in ('gene', 'CDS'):
-                continue
             attrs = fields[8]
-            # Skip pseudogenes
-            if 'pseudo=true' in attrs or 'pseudogene=' in attrs:
+
+            # Collect pseudo gene IDs
+            if fields[2] == 'gene':
+                if 'pseudo=true' in attrs or 'pseudogene=' in attrs:
+                    for part in attrs.split(';'):
+                        if part.startswith('ID='):
+                            pseudo_genes.add(part.split('=')[1])
+
+            if fields[2] != 'CDS':
                 continue
-            # Skip non-protein-coding genes (rRNA, tRNA, ncRNA)
-            if 'gene_biotype=' in attrs and 'protein_coding' not in attrs:
-                # Only skip if biotype is explicitly non-coding
-                biotype = ''
+
+            # Skip CDS from pseudo genes
+            is_pseudo = 'pseudo=true' in attrs or 'pseudogene=' in attrs
+            if not is_pseudo:
                 for part in attrs.split(';'):
-                    if part.startswith('gene_biotype='):
-                        biotype = part.split('=')[1]
-                if biotype and biotype != 'protein_coding':
-                    continue
+                    if part.startswith('Parent='):
+                        parent = part.split('=')[1]
+                        # Parent can be gene-XXX or a list
+                        for p in parent.split(','):
+                            if p in pseudo_genes:
+                                is_pseudo = True
+                                break
+            if is_pseudo:
+                continue
 
             key = (int(fields[3]), int(fields[4]), fields[6])
             if key not in seen:
                 seen.add(key)
-                genes.append({
+                cds_list.append({
                     "start": key[0],
                     "end": key[1],
                     "strand": key[2],
                 })
-    return genes
+
+    return cds_list
 
 
 def evaluate(predicted, known):
