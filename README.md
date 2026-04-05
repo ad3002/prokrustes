@@ -44,7 +44,15 @@ This will:
 
 ```bash
 docker build -t prokrustes .
-docker run prokrustes /data/ecoli_k12.fasta > output.gff
+
+# Full benchmark: 10 genomes, Prokrustes vs Prodigal, prints comparison table
+docker run prokrustes benchmark
+
+# Annotate a single genome
+docker run prokrustes annotate /data/ecoli_k12.fasta > output.gff
+
+# See all options
+docker run prokrustes --help
 ```
 
 The Docker image includes all 10 reference genomes, Prodigal baseline, and ncRNA tools.

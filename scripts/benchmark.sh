@@ -12,9 +12,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-DATA_DIR="$PROJECT_DIR/data"
-RESULTS_DIR="$PROJECT_DIR/results"
-BINARY="$PROJECT_DIR/target/release/prokrustes"
+
+# Auto-detect Docker vs local environment
+if [ -f /usr/local/bin/prokrustes ] && [ -d /data ]; then
+    # Docker
+    DATA_DIR="/data"
+    RESULTS_DIR="/results"
+    BINARY="/usr/local/bin/prokrustes"
+else
+    # Local
+    DATA_DIR="$PROJECT_DIR/data"
+    RESULTS_DIR="$PROJECT_DIR/results"
+    BINARY="$PROJECT_DIR/target/release/prokrustes"
+fi
 
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 

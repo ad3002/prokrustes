@@ -56,7 +56,9 @@ RUN mkdir -p /data && \
     curl -sL "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/685/GCF_000008685.2_ASM868v2/GCF_000008685.2_ASM868v2_genomic.gff.gz" | gunzip > /data/borrelia_burgdorferi.gff && \
     echo "All genomes downloaded."
 
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 WORKDIR /workspace
 
-ENTRYPOINT ["prokrustes"]
-CMD ["--help"]
+ENTRYPOINT ["docker-entrypoint.sh"]
