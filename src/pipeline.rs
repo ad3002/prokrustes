@@ -23,7 +23,13 @@ pub fn main_cli() {
         eprintln!("Usage: prokrustes <fasta> [--ncrna <gff>] [--debug <start> <end> <strand>] [--dump-all-orfs] [--dump-tsv] [--hmm]");
         std::process::exit(1);
     }
-    let genome = crate::io::read_fasta(&args[1]);
+    let contigs = crate::io::read_fasta_multi(&args[1]);
+    if contigs.is_empty() {
+        eprintln!("Error: no sequences found in FASTA file");
+        std::process::exit(1);
+    }
+    // For single-contig modes (debug, hmm, dump), use first contig
+    let genome: Vec<u8> = contigs.iter().flat_map(|(_, s)| s.iter().copied()).collect();
 
     // Parse --ncrna flag: GFF file with rRNA/tRNA regions to mask
     let ncrna_regions = {
@@ -97,11 +103,44 @@ pub fn main_cli() {
         return;
     }
 
-    let (mut genes, all_orfs) = annotate(&genome);
-    filter_ncrna_overlaps(&mut genes, &ncrna_regions);
+    // Multi-contig annotation: process each contig independently
+    let multi_contig = contigs.len() > 1;
+    let mut all_genes: Vec<Gene> = Vec::new();
+    let mut all_orfs_combined: Vec<Gene> = Vec::new();
+    let mut contig_info: Vec<(String, usize)> = Vec::new(); // (seqid, gene_count)
 
-    // IS element / repeat family correction (post-annotation)
-    crate::is_elements::correct_repeat_families(&genome, &mut genes);
+    if multi_contig {
+        eprintln!("Multi-contig genome: {} sequences", contigs.len());
+    }
+
+    for (seqid, contig_seq) in &contigs {
+        if contig_seq.len() < 300 {
+            if multi_contig {
+                eprintln!("  Skipping {} ({} bp — too short)", seqid, contig_seq.len());
+            }
+            continue;
+        }
+
+        if multi_contig {
+            eprintln!("  Annotating {} ({} bp)...", seqid, contig_seq.len());
+        }
+
+        let (mut genes, all_orfs) = annotate(contig_seq);
+        filter_ncrna_overlaps(&mut genes, &ncrna_regions);
+        crate::is_elements::correct_repeat_families(contig_seq, &mut genes);
+
+        contig_info.push((seqid.clone(), genes.len()));
+        all_genes.extend(genes);
+        all_orfs_combined.extend(all_orfs);
+    }
+
+    let mut genes = all_genes;
+    let all_orfs = all_orfs_combined;
+
+    if multi_contig {
+        let total: usize = contig_info.iter().map(|(_, n)| n).sum();
+        eprintln!("  Total: {} genes across {} contigs", total, contig_info.len());
+    }
 
     // Parse --model flag or auto-detect LightGBM start ranker
     let model_path = {
@@ -266,11 +305,30 @@ pub fn main_cli() {
         None
     };
 
+    // Build gene-to-seqid mapping from contig_info
+    let gene_seqids: Vec<String> = {
+        let mut ids = Vec::with_capacity(genes.len());
+        let mut idx = 0;
+        for (seqid, count) in &contig_info {
+            for _ in 0..*count {
+                ids.push(seqid.clone());
+                idx += 1;
+            }
+        }
+        // LGB re-ranking doesn't change gene count, but may reorder
+        // Pad if needed (shouldn't happen)
+        while ids.len() < genes.len() {
+            ids.push(".".to_string());
+        }
+        ids
+    };
+
     // Output GFF3
     println!("##gff-version 3");
     for (i, g) in genes.iter().enumerate() {
         let strand = if g.is_plus { "+" } else { "-" };
         let codon = std::str::from_utf8(&g.start_codon).unwrap_or("???");
+        let seqid = if i < gene_seqids.len() { &gene_seqids[i] } else { "." };
         let mut attrs = format!(
             "ID=gene_{};start_type={};rbs_score={:.2};hex_score={:.4}",
             i + 1, codon, g.rbs, g.hex_avg
@@ -281,8 +339,8 @@ pub fn main_cli() {
                 attrs.push_str(&format!(";conservation={}", label));
             }
         }
-        println!(".\tprokrustes\tCDS\t{}\t{}\t{:.1}\t{}\t0\t{}",
-            g.start, g.end, g.score, strand, attrs);
+        println!("{}\tprokrustes\tCDS\t{}\t{}\t{:.1}\t{}\t0\t{}",
+            seqid, g.start, g.end, g.score, strand, attrs);
     }
 }
 

@@ -1,12 +1,36 @@
 use std::fs;
 
-pub fn read_fasta(path: &str) -> Vec<u8> {
+/// Read multi-FASTA file. Returns vector of (name, sequence) pairs.
+pub fn read_fasta_multi(path: &str) -> Vec<(String, Vec<u8>)> {
     let data = fs::read_to_string(path).expect("Cannot read FASTA file");
-    let mut seq = Vec::with_capacity(5_000_000);
+    let mut records: Vec<(String, Vec<u8>)> = Vec::new();
+    let mut name = String::new();
+    let mut seq: Vec<u8> = Vec::with_capacity(5_000_000);
+
     for line in data.lines() {
-        if !line.starts_with('>') {
+        if let Some(header) = line.strip_prefix('>') {
+            if !name.is_empty() || !seq.is_empty() {
+                records.push((name.clone(), std::mem::take(&mut seq)));
+            }
+            name = header.split_whitespace().next().unwrap_or("").to_string();
+            seq = Vec::with_capacity(5_000_000);
+        } else {
             seq.extend(line.trim().bytes().map(|b| b.to_ascii_uppercase()));
         }
+    }
+    if !seq.is_empty() {
+        records.push((name, seq));
+    }
+    records
+}
+
+/// Read FASTA file as single concatenated sequence (legacy, for single-contig genomes).
+pub fn read_fasta(path: &str) -> Vec<u8> {
+    let records = read_fasta_multi(path);
+    let total: usize = records.iter().map(|(_, s)| s.len()).sum();
+    let mut seq = Vec::with_capacity(total);
+    for (_, s) in records {
+        seq.extend(s);
     }
     seq
 }
