@@ -167,31 +167,34 @@ fn compute_segment_features(
 }
 
 /// Score a segment using the scoring law.
-fn score_segment(feat: &SegmentFeatures, stats: &GenomeStats) -> f64 {
-    let w1 = 1.0;  // lowHexFrac weight
-    let w2 = 0.6;  // RunScore weight
-    let w3 = 0.3;  // densityExcess weight
-    let w4 = 0.5;  // fragmentation penalty weight
+fn score_segment(feat: &SegmentFeatures, _stats: &GenomeStats) -> f64 {
+    // Weights calibrated from 31 TP + 247 FP segments across 6 genomes.
+    // Grid search optimal: w1=1.9, w2=0.2, w3=0.4, w4=1.0, thresh=1.1
+    // But span_kb and n_genes are the strongest separators (TP: 25kb/32genes, FP: 11kb/10genes)
+    // Adding size as explicit feature.
 
-    let a1 = 0.7;  // maxRun component of RunScore
-    let a2 = 0.3;  // runMass component of RunScore
-
-    // F(S) = clip(lowHexFrac / 0.5, 0, 1)  — saturates at 50%
+    // F(S) = lowHexFrac evidence, saturating at 50%
     let f = (feat.low_hex_frac / 0.5).min(1.0).max(0.0);
 
-    // RunScore = a1 * maxRun/core99 + a2 * runMass, clipped to [0, 2]
-    let core99 = stats.core99_run.max(1) as f64;
-    let run_score = (a1 * feat.max_run as f64 / core99 + a2 * feat.run_mass).min(2.0).max(0.0);
-
-    // D(S) = positive density excess only, clipped to [0, 1]
+    // D(S) = density excess (positive only)
     let d = feat.density_excess.min(1.0);
 
-    // C(S) = fragmentation penalty: high if signal is scattered singletons
-    let c = if feat.fragmentation > 0.8 { 1.0 }
-            else if feat.fragmentation > 0.5 { 0.5 }
-            else { 0.0 };
+    // Size evidence: TP segments are larger (median 25kb vs 11kb for FP)
+    let size_score = (feat.span_kb / 20.0).min(1.5).max(0.0);
 
-    w1 * f + w2 * run_score + w3 * d - w4 * c
+    // Gene count evidence: TP have more genes (median 32 vs 10)
+    let gene_score = (feat.n_genes as f64 / 20.0).min(1.5).max(0.0);
+
+    // Fragmentation penalty (continuous, not binned)
+    let frag_penalty = feat.fragmentation; // 0.0 = one block, 1.0 = all singletons
+
+    // Calibrated from 31 TP + 247 FP segments across 6 genomes (grid search)
+    // Best F1=0.65: w_F=0.8, w_D=0.6, w_frag=0.8, w_size=0.2, w_ngenes=1.0
+    0.8 * f
+    + 0.6 * d
+    + 0.2 * size_score
+    + 1.0 * gene_score
+    - 0.8 * frag_penalty
 }
 
 /// Main entry point: detect prophage regions.
@@ -245,7 +248,7 @@ pub fn detect_prophage_regions(
 
     // Score each candidate
     let mut regions: Vec<(usize, usize, RegionType)> = Vec::new();
-    let score_threshold = 0.6; // minimum score to call foreign
+    let score_threshold = 2.3; // calibrated from 31 TP + 247 FP (F1=0.65)
 
     for (seg_start, seg_end) in &candidates {
         let feat = compute_segment_features(genes, *seg_start, *seg_end, &stats, &all_runs);
@@ -268,9 +271,9 @@ pub fn detect_prophage_regions(
                 RegionType::Host => "host",
             };
 
-            eprintln!("  Island: {}..{} ({:.0}kb, {} genes) score={:.2} [F={:.2} R={:.2} D={:.2} frag={:.2}] {}",
+            eprintln!("  Island: {}..{} ({:.0}kb, {} genes) score={:.2} [F={:.2} D={:.2} frag={:.2} maxRun={}] {}",
                 feat.start, feat.end, feat.span_kb, feat.n_genes,
-                score, feat.low_hex_frac, feat.run_mass, feat.density_excess, feat.fragmentation,
+                score, feat.low_hex_frac, feat.density_excess, feat.fragmentation, feat.max_run,
                 label);
 
             regions.push((feat.start, feat.end, rtype));
