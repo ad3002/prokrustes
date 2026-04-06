@@ -43,6 +43,7 @@ pub struct Gene {
     pub upstream_gene_dist: i64, // distance to nearest upstream gene (same strand), -1 if overlap
     pub upstream_coding: f64,    // coding potential of upstream in-frame region (truncation evidence)
     pub dicodon: f64,            // in-frame dicodon (codon-pair) score
+    pub region_bonus: f64,       // prophage routing: threshold adjustment
 }
 
 impl Gene {
@@ -59,7 +60,7 @@ impl Gene {
             mono: 0.0,
             edge: 0.0, score: 0.0, weight: 0.0,
             shadow_pen: 1.0,
-            _sq: 0.0, _base_weight: 0.0, adj_bonus: 0.0, leaderless: 0.0, start_ctx: 0.0, gc3_bias: 0.0, viterbi_frac: 0.0, start_nn: 0.0, stop_nn: 0.0, upstream_gene_dist: i64::MAX, upstream_coding: 0.0, dicodon: 0.0,
+            _sq: 0.0, _base_weight: 0.0, adj_bonus: 0.0, leaderless: 0.0, start_ctx: 0.0, gc3_bias: 0.0, viterbi_frac: 0.0, start_nn: 0.0, stop_nn: 0.0, upstream_gene_dist: i64::MAX, upstream_coding: 0.0, dicodon: 0.0, region_bonus: 0.0,
         }
     }
 

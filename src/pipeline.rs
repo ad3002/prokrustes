@@ -586,6 +586,9 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
             else { 0.49 };
         thresh += thresh_adj;
 
+        // Prophage routing: adjust threshold based on region type
+        thresh -= orf.region_bonus;
+
         if rbs > 0.60 { thresh *= 0.80; }
         else if rbs > 0.35 { thresh *= 0.90; }
 
@@ -1336,95 +1339,33 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
         }
     }
 
-    // 14c. Prophage detection and routing
-    // Use initial predictions to detect prophage islands (alien k-mer composition).
-    // In prophage regions: retrain hexamers from local genes, rescore ORFs.
+    // 14c. Prophage detection: multi-channel anomaly detection
     let prophage_regions = {
-        let gene_coords: Vec<(usize, usize)> = results.iter()
-            .map(|&i| (all_orfs[i].start, all_orfs[i].end))
+        let gene_coords: Vec<(usize, usize, usize)> = results.iter()
+            .map(|&i| (all_orfs[i].start, all_orfs[i].end, all_orfs[i].length))
             .collect();
         crate::prophage::detect_prophage_regions(genome, &gene_coords)
     };
 
-    // Prophage routing: DISABLED until detector precision improves.
-    // Current detector finds 25 regions (314kb) but only 11 (138kb) are real.
-    // False-positive regions corrupt hex scores of host genes.
-    // Need: functional anchors (integrase/terminase HMM) or conservation signal.
-    if false && !prophage_regions.is_empty() && prophage_regions.iter().any(|(_, _, t)| *t != crate::prophage::RegionType::Host) {
-        // Collect ALL genes in prophage regions for local hex training
-        let phage_genes_p: Vec<Gene> = plus.iter()
-            .filter(|o| o.score > 0.35 && o.length >= 200 &&
-                prophage_regions.iter().any(|(rs, re, t)| *t != crate::prophage::RegionType::Host && o.start >= *rs && o.end <= *re))
-            .cloned().collect();
-        let phage_genes_m: Vec<Gene> = minus.iter()
-            .filter(|o| o.score > 0.35 && o.length >= 200 &&
-                prophage_regions.iter().any(|(rs, re, t)| *t != crate::prophage::RegionType::Host && o.start >= *rs && o.end <= *re))
-            .cloned().collect();
-
-        let phage_hex_p = train_hex_from_set(genome, &phage_genes_p, 100);
-        let phage_hex_m = train_hex_from_set(&rc, &phage_genes_m, 100);
-        let phage_hex = merge_hex(&phage_hex_p, &phage_hex_m);
-
-        if let Some(ref phex) = phage_hex {
-            // Blend phage hex with global: 50/50
-            let blended = blend_hex(phex, &hex_model, 0.50);
-
-            let mut phage_rescored = 0;
-            // Rescore ORFs in prophage regions with blended model
-            for orf in all_orfs.iter_mut() {
-                let in_phage = prophage_regions.iter().any(|(rs, re, t)|
-                    *t != crate::prophage::RegionType::Host && orf.start >= *rs && orf.end <= *re);
-                if !in_phage { continue; }
-
-                // Re-score hex using blended model on the correct strand sequence
-                let seq_ref = if orf.is_plus { genome } else { &rc };
-                if orf.seq_end <= seq_ref.len() && orf.seq_start < orf.seq_end {
-                    let s = &seq_ref[orf.seq_start..orf.seq_end];
-                    let ns = s.len();
-                    if ns >= 6 {
-                        let mut scores = [0.0f64; 3];
-                        let mut counts = [0u32; 3];
-                        for i in 0..ns.saturating_sub(5) {
-                            if let Some(idx) = crate::io::hex_enc(&s[i..i+6]) {
-                                let f = i % 3;
-                                scores[f] += blended[idx];
-                                counts[f] += 1;
-                            }
-                        }
-                        let n0 = counts[0];
-                        if n0 > 0 {
-                            orf.hex_avg = scores[0] / n0 as f64;
-                            let avgs: [f64; 3] = [
-                                if counts[0] > 0 { scores[0] / counts[0] as f64 } else { 0.0 },
-                                if counts[1] > 0 { scores[1] / counts[1] as f64 } else { 0.0 },
-                                if counts[2] > 0 { scores[2] / counts[2] as f64 } else { 0.0 },
-                            ];
-                            orf.frame_bias = avgs[0] - avgs[1].max(avgs[2]);
-                        }
-                    }
-                }
-                orf.score = composite_score(orf, gc3_target);
-
-                // In cryptic regions, penalize weak ORFs (pseudogenes)
-                let in_cryptic = prophage_regions.iter().any(|(rs, re, t)|
-                    *t == crate::prophage::RegionType::Cryptic && orf.start >= *rs && orf.end <= *re);
-                if in_cryptic && orf.hex_avg < 0.10 && orf.rbs < 0.35 {
-                    orf.score *= 0.75;
-                }
-
-                phage_rescored += 1;
+    // 14c. Prophage routing: post-hoc adjustments (no DP re-run!)
+    // Only remove weak genes in degraded regions (pseudogene suppression).
+    // No bonus for prophage regions — adding genes through threshold
+    // adjustment generates too many FP.
+    if !prophage_regions.is_empty() {
+        let before = results.len();
+        results.retain(|&i| {
+            let orf = &all_orfs[i];
+            let bonus = crate::prophage::region_bonus_for(orf.start, orf.end, &prophage_regions);
+            if bonus < -0.01 {
+                // Degraded region: remove weak genes (pseudogene suppression)
+                orf.score > 0.42 || orf.hex_avg > 0.15 || orf.rbs > 0.50
+            } else {
+                true // keep everything else
             }
-
-            if phage_rescored > 0 {
-                eprintln!("Prophage routing: {} ORFs rescored with phage hex model ({} + {} training genes)",
-                    phage_rescored, phage_genes_p.len(), phage_genes_m.len());
-
-                // Re-run prediction with updated scores
-                let (r_phage, _) = run_prediction(&mut all_orfs, density_adj);
-                if r_phage.len() >= (results.len() as f64 * 0.90) as usize {
-                    results = r_phage;
-                }
-            }
+        });
+        let removed = before - results.len();
+        if removed > 0 {
+            eprintln!("Prophage routing: {} weak genes removed from degraded regions", removed);
         }
     }
 
