@@ -1474,18 +1474,16 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
             });
             if overlaps_selected { continue; }
 
-            // smORF criteria: gap context narrows search, but still need evidence.
-            // Key insight from data: 18% precision at <150bp, 71% at 150-300bp.
-            // In gaps, precision should be higher (fewer candidates).
-            if orf.score < 0.35 { continue; }
-            if orf.hex_avg < 0.05 { continue; }  // must show coding potential
+            // smORF criteria in gaps: still need strong evidence
+            if orf.score < 0.33 { continue; }
+            if orf.hex_avg < 0.05 { continue; }
 
-            // Need RBS or strong coding signal
+            // Need RBS or strong coding
             let has_rbs = orf.rbs > 0.30;
             let strong_hex = orf.hex_avg > 0.15;
             if !has_rbs && !strong_hex { continue; }
 
-            // Prefer longest ORF in stop group and ATG starts
+            // Prefer longest ORF
             if !orf.is_longest { continue; }
             if !orf.is_atg() && orf.rbs < 0.40 { continue; }
 
