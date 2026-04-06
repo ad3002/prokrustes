@@ -375,9 +375,12 @@ pub fn operon_boost(genes: &mut [Gene], window: usize, min_score: f64) {
     }
 }
 
-/// Connection scoring (Prodigal idea): model gene spacing.
-/// Bacteria pack genes tightly: overlap 1-4bp (ATGA) or gap <50bp is normal.
-/// Genes fitting this pattern get a bonus. Isolated genes get nothing.
+/// Intergenic distance model (based on Prodigal's intergenic_mod).
+/// Models gene spacing explicitly in the DP:
+/// - Same-strand, close (<60bp): bonus +0.04 to +0.08
+/// - Same-strand, medium (60-180bp): neutral
+/// - Same-strand, far (>180bp) or opposite strand: penalty -0.04
+/// - Adjacent genes (0-4bp): cancel any RBS penalty (operon-internal)
 /// Applied to DP weight so spacing affects gene selection.
 pub fn connection_score(genes: &mut [Gene]) {
     let n = genes.len();
@@ -408,9 +411,8 @@ pub fn connection_score(genes: &mut [Gene]) {
                 0
             };
 
-            // Score based on distance pattern (conservative bonuses)
             let conn = if overlap >= 1 && overlap <= 4 {
-                0.04  // ATGA-like overlap
+                0.04  // ATGA-like coupling
             } else if overlap > 4 && overlap <= 30 {
                 0.02
             } else if gap <= 20 {
