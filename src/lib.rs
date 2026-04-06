@@ -12,4 +12,5 @@ pub mod conservation;
 pub mod is_elements;
 pub mod lgb_model;
 pub mod gc_frame;
+pub mod prophage;
 pub mod pipeline;
