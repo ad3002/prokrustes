@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prokrustes — Anchor Graph</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0e14;
+  color: #c5cdd9;
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+}
+
+header {
+  grid-column: 1 / -1;
+  background: linear-gradient(90deg, #0d1117 0%, #161b22 100%);
+  border-bottom: 1px solid #21262d;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+
+header h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 15px;
+  color: #58a6ff;
+  letter-spacing: -0.3px;
+}
+
+header h1 span {
+  color: #8b949e;
+  font-weight: 300;
+}
+
+header .stats {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #484f58;
+  display: flex;
+  gap: 16px;
+}
+
+header .stats b { color: #7ee787; }
+
+/* Left panel */
+#panel-left {
+  background: #0d1117;
+  border-right: 1px solid #21262d;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+#panel-left h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #484f58;
+  margin: 12px 0 8px;
+}
+
+.genome-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #8b949e;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.genome-btn:hover { background: #161b22; border-color: #21262d; }
+.genome-btn.active { background: #161b22; border-color: #58a6ff; color: #c9d1d9; }
+
+.genome-btn .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.genome-btn .count {
+  margin-left: auto;
+  color: #484f58;
+  font-size: 10px;
+}
+
+/* Filter controls */
+.filter-group {
+  margin: 8px 0;
+}
+
+.filter-group label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #484f58;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filter-group input[type=range] {
+  width: 100%;
+  accent-color: #58a6ff;
+}
+
+.filter-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #7ee787;
+  float: right;
+}
+
+/* Canvas */
+#canvas {
+  position: relative;
+  overflow: hidden;
+}
+
+#canvas svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Right panel — gene info */
+#panel-right {
+  background: #0d1117;
+  border-left: 1px solid #21262d;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+#panel-right h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #484f58;
+  margin: 16px 0 8px;
+}
+
+#gene-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+#gene-info .gene-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #58a6ff;
+  margin-bottom: 8px;
+}
+
+#gene-info .field {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #161b22;
+}
+
+#gene-info .field .label { color: #484f58; }
+#gene-info .field .value { color: #c9d1d9; }
+
+.genome-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  margin: 2px;
+  background: #161b22;
+  border: 1px solid #21262d;
+}
+
+.neighbor-link {
+  display: block;
+  padding: 4px 8px;
+  margin: 2px 0;
+  background: #161b22;
+  border-radius: 4px;
+  color: #8b949e;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.neighbor-link:hover { border-color: #58a6ff; color: #c9d1d9; }
+
+/* Legend */
+.legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(13,17,23,0.9);
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #21262d; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>PROKRUSTES <span>anchor graph</span></h1>
+    <div class="stats">
+      <span><b id="stat-anchors">0</b> anchors</span>
+      <span><b id="stat-edges">0</b> edges</span>
+      <span><b id="stat-genomes">0</b> genomes</span>
+    </div>
+  </header>
+
+  <div id="panel-left">
+    <h3>Genomes</h3>
+    <div id="genome-list"></div>
+
+    <h3>Edge filter</h3>
+    <div class="filter-group">
+      <label>Min conservation <span class="filter-value" id="edge-filter-val">≥2</span></label>
+      <input type="range" id="edge-filter" min="1" max="10" value="2">
+    </div>
+
+    <h3>View</h3>
+    <div class="filter-group">
+      <button class="genome-btn" id="btn-ecoli-chain" style="margin-bottom:4px">
+        <span class="dot" style="background:#58a6ff"></span>
+        E. coli chromosome map
+      </button>
+      <button class="genome-btn" id="btn-synteny">
+        <span class="dot" style="background:#f0883e"></span>
+        E. coli ↔ Salmonella synteny
+      </button>
+    </div>
+  </div>
+
+  <div id="canvas">
+    <svg id="viz"></svg>
+    <div class="legend">
+      <div class="legend-row"><div class="legend-dot" style="background:#f85149"></div> 10 genomes (universal)</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#f0883e"></div> 7-9 genomes</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#d29922"></div> 5-6 genomes</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#3fb950"></div> 4 genomes</div>
+    </div>
+  </div>
+
+  <div id="panel-right">
+    <h3>Selected anchor</h3>
+    <div id="gene-info">
+      <div style="color:#484f58;font-size:12px;padding:20px 0;">Click an anchor node to inspect</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GENOME_COLORS = {
+  'ecoli_k12': '#58a6ff',
+  'salmonella_lt2': '#f0883e',
+  'bacillus_subtilis': '#3fb950',
+  'pseudomonas_aeruginosa': '#bc8cff',
+  'saureus_nctc8325': '#f85149',
+  'mycobacterium_tuberculosis': '#d29922',
+  'mycoplasma_genitalium': '#db61a2',
+  'synechocystis_pcc6803': '#79c0ff',
+  'bacteroides_fragilis': '#7ee787',
+  'borrelia_burgdorferi': '#ffa657',
+};
+
+const GENOME_LABELS = {
+  'ecoli_k12': 'E. coli K-12',
+  'salmonella_lt2': 'Salmonella LT2',
+  'bacillus_subtilis': 'B. subtilis',
+  'pseudomonas_aeruginosa': 'P. aeruginosa',
+  'saureus_nctc8325': 'S. aureus',
+  'mycobacterium_tuberculosis': 'M. tuberculosis',
+  'mycoplasma_genitalium': 'M. genitalium',
+  'synechocystis_pcc6803': 'Synechocystis',
+  'bacteroides_fragilis': 'B. fragilis',
+  'borrelia_burgdorferi': 'B. burgdorferi',
+};
+
+function nodeColor(nGenomes) {
+  if (nGenomes >= 10) return '#f85149';
+  if (nGenomes >= 7) return '#f0883e';
+  if (nGenomes >= 5) return '#d29922';
+  return '#3fb950';
+}
+
+function edgeColor(nGenomes) {
+  const t = Math.min(nGenomes / 7, 1);
+  const r = Math.round(33 + t * 55);
+  const g = Math.round(38 + t * 30);
+  const b = Math.round(45 + t * 30);
+  return `rgb(${r},${g},${b})`;
+}
+
+let graphData = null;
+let selectedGenome = null;
+let selectedNode = null;
+let minEdgeConservation = 2;
+
+async function loadData() {
+  try {
+    const resp = await fetch('/data/anchor_graph.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    graphData = await resp.json();
+    console.log('Loaded:', Object.keys(graphData.anchors).length, 'anchors');
+    init();
+  } catch(e) {
+    console.error('Failed to load data:', e);
+    document.getElementById('stat-anchors').textContent = 'ERR';
+  }
+}
+
+function init() {
+  const nAnchors = Object.keys(graphData.anchors).length;
+  const nEdges = Object.keys(graphData.edges).length;
+  const nGenomes = Object.keys(graphData.chains).length;
+
+  document.getElementById('stat-anchors').textContent = nAnchors;
+  document.getElementById('stat-edges').textContent = nEdges;
+  document.getElementById('stat-genomes').textContent = nGenomes;
+
+  // Build genome list
+  const list = document.getElementById('genome-list');
+  for (const [gname, color] of Object.entries(GENOME_COLORS)) {
+    const chain = graphData.chains[gname] || [];
+    const btn = document.createElement('button');
+    btn.className = 'genome-btn';
+    btn.innerHTML = `<span class="dot" style="background:${color}"></span>
+      ${GENOME_LABELS[gname] || gname}
+      <span class="count">${chain.length}</span>`;
+    btn.onclick = () => toggleGenome(gname, btn);
+    list.appendChild(btn);
+  }
+
+  // Edge filter
+  document.getElementById('edge-filter').oninput = (e) => {
+    minEdgeConservation = +e.target.value;
+    document.getElementById('edge-filter-val').textContent = `≥${minEdgeConservation}`;
+    render();
+  };
+
+  // View buttons
+  document.getElementById('btn-ecoli-chain').onclick = () => {
+    selectedGenome = 'ecoli_k12';
+    document.querySelectorAll('.genome-btn').forEach(b => b.classList.remove('active'));
+    render();
+  };
+  document.getElementById('btn-synteny').onclick = () => {
+    showSynteny();
+  };
+
+  render();
+}
+
+function toggleGenome(gname, btn) {
+  if (selectedGenome === gname) {
+    selectedGenome = null;
+    btn.classList.remove('active');
+  } else {
+    selectedGenome = gname;
+    document.querySelectorAll('#genome-list .genome-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  render();
+}
+
+function render() {
+  const svg = d3.select('#viz');
+  svg.selectAll('*').remove();
+
+  const rect = document.getElementById('canvas').getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = Math.min(W, H) * 0.38;
+
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+
+  // Zoom + pan
+  const zoom = d3.zoom()
+    .scaleExtent([0.3, 8])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
+    });
+  svg.call(zoom);
+
+  const g = svg.append('g');
+
+  // Use E. coli chain as reference layout (or selected genome)
+  const refGenome = selectedGenome || 'ecoli_k12';
+  const chain = graphData.chains[refGenome] || [];
+  if (!chain.length) return;
+
+  // Map anchor name → angle
+  const angleMap = {};
+  chain.forEach((gene, i) => {
+    angleMap[gene.name] = (i / chain.length) * 2 * Math.PI - Math.PI / 2;
+  });
+
+  // Draw chromosome circle
+  g.append('circle')
+    .attr('cx', cx).attr('cy', cy).attr('r', R)
+    .attr('fill', 'none')
+    .attr('stroke', '#161b22')
+    .attr('stroke-width', 2);
+
+  // Draw tick marks for 0, 1, 2, 3, 4 Mb
+  const genomeLen = chain[chain.length - 1]?.end || 4600000;
+  for (let mb = 0; mb < genomeLen; mb += 500000) {
+    const angle = (mb / genomeLen) * 2 * Math.PI - Math.PI / 2;
+    const x1 = cx + (R - 8) * Math.cos(angle);
+    const y1 = cy + (R - 8) * Math.sin(angle);
+    const x2 = cx + (R + 8) * Math.cos(angle);
+    const y2 = cy + (R + 8) * Math.sin(angle);
+    g.append('line')
+      .attr('x1', x1).attr('y1', y1)
+      .attr('x2', x2).attr('y2', y2)
+      .attr('stroke', '#21262d').attr('stroke-width', 1);
+
+    if (mb % 1000000 === 0) {
+      const lx = cx + (R + 22) * Math.cos(angle);
+      const ly = cy + (R + 22) * Math.sin(angle);
+      g.append('text')
+        .attr('x', lx).attr('y', ly)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('fill', '#484f58')
+        .attr('font-family', 'JetBrains Mono')
+        .attr('font-size', '9px')
+        .text(`${mb/1000000}M`);
+    }
+  }
+
+  // Draw edges
+  const edges = graphData.edges;
+  for (const [key, info] of Object.entries(edges)) {
+    if (info.n_genomes < minEdgeConservation) continue;
+
+    const a1 = angleMap[info.left];
+    const a2 = angleMap[info.right];
+    if (a1 === undefined || a2 === undefined) continue;
+
+    // Skip if angular distance > 30 degrees (too far = not adjacent on this layout)
+    const adiff = Math.abs(a2 - a1);
+    if (adiff > 0.5 && adiff < 5.8) continue;
+
+    const x1 = cx + R * Math.cos(a1);
+    const y1 = cy + R * Math.sin(a1);
+    const x2 = cx + R * Math.cos(a2);
+    const y2 = cy + R * Math.sin(a2);
+
+    // Draw as arc along circle
+    const midAngle = (a1 + a2) / 2;
+    const arcR = R - 4;
+    const largeArc = adiff > Math.PI ? 1 : 0;
+
+    g.append('path')
+      .attr('d', `M ${cx + arcR * Math.cos(a1)} ${cy + arcR * Math.sin(a1)}
+                  A ${arcR} ${arcR} 0 ${largeArc} 1
+                  ${cx + arcR * Math.cos(a2)} ${cy + arcR * Math.sin(a2)}`)
+      .attr('fill', 'none')
+      .attr('stroke', edgeColor(info.n_genomes))
+      .attr('stroke-width', Math.min(info.n_genomes * 0.5, 3))
+      .attr('opacity', 0.6);
+  }
+
+  // Draw nodes
+  chain.forEach((gene, i) => {
+    const angle = angleMap[gene.name];
+    const nGenomes = (graphData.anchors[gene.name] || []).length;
+    const x = cx + R * Math.cos(angle);
+    const y = cy + R * Math.sin(angle);
+    const r = nGenomes >= 10 ? 4 : nGenomes >= 7 ? 3.5 : 3;
+
+    const node = g.append('circle')
+      .attr('cx', x).attr('cy', y).attr('r', r)
+      .attr('fill', nodeColor(nGenomes))
+      .attr('stroke', '#0a0e14')
+      .attr('stroke-width', 1)
+      .attr('cursor', 'pointer')
+      .attr('opacity', selectedGenome ? (graphData.anchors[gene.name]?.includes(selectedGenome) ? 1 : 0.15) : 0.85);
+
+    node.on('click', () => selectNode(gene.name));
+    node.on('mouseover', function() {
+      d3.select(this).attr('r', r + 3).attr('stroke', '#fff').attr('stroke-width', 2);
+    });
+    node.on('mouseout', function() {
+      d3.select(this).attr('r', r).attr('stroke', '#0a0e14').attr('stroke-width', 1);
+    });
+
+    // Label for highly conserved genes
+    if (nGenomes >= 10 && i % 8 === 0) {
+      const lx = cx + (R + 36) * Math.cos(angle);
+      const ly = cy + (R + 36) * Math.sin(angle);
+      const rotation = (angle * 180 / Math.PI) + (angle > Math.PI / 2 || angle < -Math.PI / 2 ? 180 : 0);
+      g.append('text')
+        .attr('x', lx).attr('y', ly)
+        .attr('text-anchor', angle > Math.PI / 2 || angle < -Math.PI / 2 ? 'end' : 'start')
+        .attr('dominant-baseline', 'middle')
+        .attr('transform', `rotate(${rotation},${lx},${ly})`)
+        .attr('fill', '#484f58')
+        .attr('font-family', 'JetBrains Mono')
+        .attr('font-size', '8px')
+        .text(gene.name);
+    }
+  });
+
+  // Genome label in center
+  g.append('text')
+    .attr('x', cx).attr('y', cy - 12)
+    .attr('text-anchor', 'middle')
+    .attr('fill', '#c9d1d9')
+    .attr('font-family', 'JetBrains Mono')
+    .attr('font-size', '14px')
+    .attr('font-weight', '600')
+    .text(GENOME_LABELS[refGenome] || refGenome);
+
+  g.append('text')
+    .attr('x', cx).attr('y', cy + 8)
+    .attr('text-anchor', 'middle')
+    .attr('fill', '#484f58')
+    .attr('font-family', 'JetBrains Mono')
+    .attr('font-size', '10px')
+    .text(`${chain.length} anchors`);
+}
+
+function showSynteny() {
+  // TODO: overlay Salmonella chain as inner ring
+  selectedGenome = 'salmonella_lt2';
+  render();
+}
+
+function selectNode(name) {
+  selectedNode = name;
+  const info = document.getElementById('gene-info');
+  const genomes = graphData.anchors[name] || [];
+  const nGenomes = genomes.length;
+
+  // Find neighbors from edges
+  const neighbors = [];
+  for (const [key, edge] of Object.entries(graphData.edges)) {
+    if (edge.left === name) {
+      neighbors.push({ name: edge.right, direction: '→', n: edge.n_genomes, gaps: edge.gaps });
+    }
+    if (edge.right === name) {
+      neighbors.push({ name: edge.left, direction: '←', n: edge.n_genomes, gaps: edge.gaps });
+    }
+  }
+  neighbors.sort((a, b) => b.n - a.n);
+
+  info.innerHTML = `
+    <div class="gene-name">${name}</div>
+    <div class="field"><span class="label">Conservation</span><span class="value" style="color:${nodeColor(nGenomes)}">${nGenomes}/10 genomes</span></div>
+    <div class="field"><span class="label">Neighbors</span><span class="value">${neighbors.length}</span></div>
+    <h3 style="margin-top:16px">Present in</h3>
+    <div>${genomes.map(g => `<span class="genome-tag" style="border-color:${GENOME_COLORS[g] || '#21262d'};color:${GENOME_COLORS[g] || '#8b949e'}">${GENOME_LABELS[g] || g}</span>`).join('')}</div>
+    <h3>Neighbors</h3>
+    <div>${neighbors.slice(0, 15).map(n => `
+      <div class="neighbor-link" onclick="selectNode('${n.name}')">
+        ${n.direction} <b>${n.name}</b>
+        <span style="float:right;color:#484f58">${n.n} genomes</span>
+      </div>
+    `).join('')}</div>
+  `;
+}
+
+loadData();
+</script>
+</body>
+</html>
