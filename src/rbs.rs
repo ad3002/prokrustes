@@ -223,3 +223,105 @@ pub fn compute_upstream_at(seq: &[u8], start_pos: usize) -> f64 {
     let at = region.iter().filter(|&&c| c == b'A' || c == b'T').count();
     at as f64 / region.len() as f64
 }
+
+/// Trained upstream composition model.
+/// Stores per-position nucleotide preferences at 32 positions relative to start.
+/// Positions: -1, -2 (start context) and -15 to -44 (upstream, skipping RBS zone).
+pub struct UpstreamModel {
+    /// weights[pos_index][nt] where nt: 0=A, 1=C, 2=G, 3=T
+    pub weights: [[f64; 4]; 32],
+}
+
+impl UpstreamModel {
+    /// Train upstream model from confident genes.
+    pub fn train(seq: &[u8], genes: &[Gene]) -> Option<Self> {
+        if genes.len() < 100 { return None; }
+
+        // Count nucleotide frequencies at each position
+        let mut counts = [[0u32; 4]; 32];
+        let mut totals = [0u32; 32];
+
+        // Background counts (genome-wide)
+        let mut bg = [0u32; 4];
+        let mut bg_total = 0u32;
+        for &b in seq {
+            let n = nt4(b);
+            if n < 4 { bg[n] += 1; bg_total += 1; }
+        }
+
+        for gene in genes {
+            if gene.score < 0.45 || gene.length < 300 { continue; }
+            let sp = gene.seq_start;
+
+            // Positions -1, -2 (indices 0, 1)
+            for offset in 1..=2usize {
+                if sp >= offset {
+                    let n = nt4(seq[sp - offset]);
+                    if n < 4 {
+                        counts[offset - 1][n] += 1;
+                        totals[offset - 1] += 1;
+                    }
+                }
+            }
+
+            // Positions -15 to -44 (indices 2..32)
+            for i in 0..30usize {
+                let pos = 15 + i; // distance from start
+                if sp >= pos {
+                    let n = nt4(seq[sp - pos]);
+                    if n < 4 {
+                        counts[i + 2][n] += 1;
+                        totals[i + 2] += 1;
+                    }
+                }
+            }
+        }
+
+        // Compute log-likelihood ratios vs background
+        let mut weights = [[0.0f64; 4]; 32];
+        let bg_f = bg_total as f64;
+
+        for p in 0..32 {
+            if totals[p] < 50 { continue; }
+            let t_f = totals[p] as f64;
+            for nt in 0..4 {
+                let p_gene = (counts[p][nt] as f64 + 1.0) / (t_f + 4.0);
+                let p_bg = (bg[nt] as f64 + 1.0) / (bg_f + 4.0);
+                weights[p][nt] = (p_gene / p_bg).ln();
+            }
+        }
+
+        Some(UpstreamModel { weights })
+    }
+
+    /// Score a single start position using the upstream model.
+    pub fn score(&self, seq: &[u8], start_pos: usize) -> f64 {
+        let mut total = 0.0f64;
+        let mut n = 0u32;
+
+        // Positions -1, -2
+        for offset in 1..=2usize {
+            if start_pos >= offset {
+                let nt = nt4(seq[start_pos - offset]);
+                if nt < 4 {
+                    total += self.weights[offset - 1][nt];
+                    n += 1;
+                }
+            }
+        }
+
+        // Positions -15 to -44
+        for i in 0..30usize {
+            let pos = 15 + i;
+            if start_pos >= pos {
+                let nt = nt4(seq[start_pos - pos]);
+                if nt < 4 {
+                    total += self.weights[i + 2][nt];
+                    n += 1;
+                }
+            }
+        }
+
+        if n > 0 { total / n as f64 } else { 0.0 }
+    }
+}
