@@ -697,7 +697,20 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
         if orf.rbs > 0.60 { base *= 0.80; }
         else if orf.rbs > 0.35 { base *= 0.90; }
 
-        let w = (orf.score - base) + (orf.hex_total * 0.004).max(0.0);
+        let mut w = (orf.score - base) + (orf.hex_total * 0.004).max(0.0);
+
+        // Short gene penalty asymmetry (Prodigal technique):
+        // For genes <250bp, amplify negative signals and shrink positive ones.
+        // This requires stronger evidence for short genes to pass the DP.
+        if length < 250 {
+            let ratio = length as f64 / 250.0; // 0.36 at 90bp, 0.60 at 150bp, 1.0 at 250bp
+            if w < 0.0 {
+                w *= 1.0 / ratio; // amplify negatives (e.g. 2.78x at 90bp)
+            } else {
+                w *= ratio;       // shrink positives (e.g. 0.36x at 90bp)
+            }
+        }
+
         all_orfs[i].weight = w;
     }
 
