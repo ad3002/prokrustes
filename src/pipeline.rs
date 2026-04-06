@@ -1423,6 +1423,69 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     output.sort_by_key(|g| g.start);
     output.dedup_by(|a, b| a.start == b.start && a.end == b.end && a.is_plus == b.is_plus);
 
+    // 16a. smORF rescue: find short genes in intergenic gaps
+    // The main pipeline misses many short genes (90-300bp) due to strict
+    // hexamer/length thresholds. After confirming the large gene framework,
+    // search specifically for short ORFs in the remaining gaps.
+    {
+        let sel_set: std::collections::HashSet<(usize, usize, bool)> = output.iter()
+            .map(|g| (g.start, g.end, g.is_plus)).collect();
+
+        // Build gap list from output genes (any strand)
+        let mut coverage: Vec<(usize, usize)> = output.iter()
+            .map(|g| (g.start, g.end)).collect();
+        coverage.sort();
+
+        // Merge overlapping intervals
+        let mut merged: Vec<(usize, usize)> = Vec::new();
+        for &(s, e) in &coverage {
+            if let Some(last) = merged.last_mut() {
+                if s <= last.1 + 1 {
+                    last.1 = last.1.max(e);
+                    continue;
+                }
+            }
+            merged.push((s, e));
+        }
+
+        let mut smorf_rescued = 0;
+        for (oi, orf) in all_orfs.iter().enumerate() {
+            // Only short ORFs
+            if orf.length < 90 || orf.length > 300 { continue; }
+            // Skip if already selected
+            if sel_set.contains(&(orf.start, orf.end, orf.is_plus)) { continue; }
+
+            // Must be in a gap (not overlapping any selected gene)
+            let overlaps_selected = merged.iter().any(|&(s, e)| {
+                orf.start < e && orf.end > s
+            });
+            if overlaps_selected { continue; }
+
+            // smORF criteria: gap context narrows search, but still need evidence.
+            // Key insight from data: 18% precision at <150bp, 71% at 150-300bp.
+            // In gaps, precision should be higher (fewer candidates).
+            if orf.score < 0.35 { continue; }
+            if orf.hex_avg < 0.05 { continue; }  // must show coding potential
+
+            // Need RBS or strong coding signal
+            let has_rbs = orf.rbs > 0.30;
+            let strong_hex = orf.hex_avg > 0.15;
+            if !has_rbs && !strong_hex { continue; }
+
+            // Prefer longest ORF in stop group and ATG starts
+            if !orf.is_longest { continue; }
+            if !orf.is_atg() && orf.rbs < 0.40 { continue; }
+
+            output.push(orf.clone());
+            smorf_rescued += 1;
+        }
+
+        if smorf_rescued > 0 {
+            output.sort_by_key(|g| g.start);
+            eprintln!("smORF rescue: {} short genes found in gaps", smorf_rescued);
+        }
+    }
+
     // 16b. Data-driven confidence filter.
     // Learned from 10 reference genomes (35K TP, 3.5K FP):
     //   <150bp: precision=18% → very strict
