@@ -34,7 +34,7 @@ def parse_detected_regions(stderr_text):
     """Parse detected regions from Prokrustes stderr."""
     regions = []
     for line in stderr_text.split('\n'):
-        m = re.match(r'\s*Region:\s+(\d+)\.\.(\d+)\s+\([\d.]+kb\)\s+(\w+)', line)
+        m = re.match(r'\s*(?:Region|Island):\s+(\d+)\.\.(\d+)\s+\([\d.]+kb.*?\)\s+(\w+)', line)
         if m:
             regions.append((int(m.group(1)), int(m.group(2)), m.group(3)))
     return regions

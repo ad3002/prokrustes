@@ -1339,12 +1339,13 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
         }
     }
 
-    // 14c. Prophage detection: multi-channel anomaly detection
+    // 14c. Prophage detection: gene-level hex outlier clustering
     let prophage_regions = {
-        let gene_coords: Vec<(usize, usize, usize)> = results.iter()
-            .map(|&i| (all_orfs[i].start, all_orfs[i].end, all_orfs[i].length))
+        let mut selected_genes: Vec<Gene> = results.iter()
+            .map(|&i| all_orfs[i].clone())
             .collect();
-        crate::prophage::detect_prophage_regions(genome, &gene_coords)
+        selected_genes.sort_by_key(|g| g.start);
+        crate::prophage::detect_prophage_regions(&selected_genes, glen)
     };
 
     // 14c. Prophage routing: post-hoc adjustments (no DP re-run!)
