@@ -209,21 +209,31 @@ pub fn main_cli() {
                 let mut best_lgb = f64::NEG_INFINITY;
                 let mut best_c: Option<&&crate::types::Gene> = None;
 
+                // Sort candidates by length and hex for rank features
+                let mut len_sorted: Vec<usize> = (0..candidates.len()).collect();
+                len_sorted.sort_by(|&a, &b| candidates[b].length.cmp(&candidates[a].length));
+                let mut hex_sorted: Vec<usize> = (0..candidates.len()).collect();
+                hex_sorted.sort_by(|&a, &b| candidates[b].hex_avg.partial_cmp(&candidates[a].hex_avg).unwrap_or(std::cmp::Ordering::Equal));
+
                 for (ci, c) in candidates.iter().enumerate() {
+                    let len_rank = len_sorted.iter().position(|&x| x == ci).unwrap_or(0) as f64
+                        / (candidates.len() as f64 - 1.0).max(1.0);
+                    let hex_rank = hex_sorted.iter().position(|&x| x == ci).unwrap_or(0) as f64
+                        / (candidates.len() as f64 - 1.0).max(1.0);
+
+                    // V2 features (22): matches training order in export_start_training.py
                     let features = [
                         c.rbs, c.rbs_pwm, c.start_type(), c.hex_avg, c.frame_bias, c.edge,
                         c.length as f64, c.score, c.start_nn, c.start_ctx,
                         c.upstream_at, c.leaderless, c.gc3_bias,
                         if c.is_longest { 1.0 } else { 0.0 },
-                        ci as f64, n_cands,
-                        c.rbs - max_rbs,
-                        c.hex_avg - max_hex,
-                        (c.length as f64) - (max_len as f64),
-                        c.score - max_score,
-                        c.length as f64 / max_len as f64,
-                        c.upstream_coding,
-                        (max_len - c.length) as f64 / 3.0,
-                        1.0 - c.length as f64 / max_len as f64,
+                        c.hex_cov, c.viterbi_frac,
+                        c.hex_avg - max_hex,              // delta_hex_to_longest
+                        c.length as f64 / max_len as f64, // frac_of_longest
+                        c.rbs - max_rbs,                  // delta_rbs_to_best
+                        c.score - max_score,              // delta_score_to_best
+                        len_rank,                         // length_rank
+                        hex_rank,                         // hex_rank
                     ];
                     let s = model.predict(&features);
                     if s > best_lgb {
