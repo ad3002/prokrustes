@@ -530,3 +530,90 @@ pub fn score_atypical(seq: &[u8], orfs: &mut [Gene], model: &HexModel, genome_gc
         }
     }
 }
+
+// --- Dicodon (codon-pair) scoring ---
+// A dicodon is 2 adjacent codons read in-frame (6bp at codon boundaries).
+// Same size as hexamer (4096 entries) but captures codon-pair bias rather
+// than sliding-window hexamer frequencies.
+
+/// Train dicodon model from confident genes.
+pub fn train_dicodon(seq: &[u8], orfs: &[Gene], min_len: usize) -> Option<HexModel> {
+    let training: Vec<&Gene> = orfs.iter()
+        .filter(|o| o.length >= min_len && o.is_longest)
+        .collect();
+    if training.len() < 50 { return None; }
+
+    let mut cod = [0u32; N_HEX]; // coding dicodon counts
+    let mut ct = 0u64;
+    let mut ncod = [0u32; N_HEX]; // noncoding dicodon counts (from intergenic)
+    let mut nt = 0u64;
+
+    // Coding: walk in-frame through training genes
+    for orf in &training {
+        let s = &seq[orf.seq_start..orf.seq_end];
+        let mut i = 0;
+        while i + 6 <= s.len() {
+            if let Some(idx) = hex_enc(&s[i..i+6]) {
+                cod[idx] += 1;
+                ct += 1;
+            }
+            i += 6; // step by 2 codons (6bp) — always in-frame
+        }
+    }
+
+    // Noncoding: sample from intergenic regions
+    // Use regions between training genes
+    let mut gene_intervals: Vec<(usize, usize)> = training.iter()
+        .map(|o| (o.seq_start, o.seq_end)).collect();
+    gene_intervals.sort();
+
+    let mut prev_end = 0;
+    for &(start, end) in &gene_intervals {
+        if start > prev_end + 50 {
+            let ig = &seq[prev_end..start];
+            // Sample dicodons from all 3 frames in intergenic
+            for frame in 0..3 {
+                let mut i = frame;
+                while i + 6 <= ig.len() {
+                    if let Some(idx) = hex_enc(&ig[i..i+6]) {
+                        ncod[idx] += 1;
+                        nt += 1;
+                    }
+                    i += 6;
+                }
+            }
+        }
+        prev_end = prev_end.max(end);
+    }
+
+    if ct < 1000 || nt < 1000 { return None; }
+
+    // Log-likelihood ratio
+    let mut model = [0.0f64; N_HEX];
+    let ct_f = ct as f64;
+    let nt_f = nt as f64;
+    for i in 0..N_HEX {
+        let p_cod = (cod[i] as f64 + 1.0) / (ct_f + N_HEX as f64);
+        let p_ncod = (ncod[i] as f64 + 1.0) / (nt_f + N_HEX as f64);
+        model[i] = (p_cod / p_ncod).ln();
+    }
+    Some(model)
+}
+
+/// Score all ORFs with dicodon model (in-frame only).
+pub fn score_dicodon_all(seq: &[u8], orfs: &mut [Gene], model: &HexModel) {
+    for orf in orfs.iter_mut() {
+        let s = &seq[orf.seq_start..orf.seq_end];
+        let mut total = 0.0f64;
+        let mut n = 0u32;
+        let mut i = 0;
+        while i + 6 <= s.len() {
+            if let Some(idx) = hex_enc(&s[i..i+6]) {
+                total += model[idx];
+                n += 1;
+            }
+            i += 6;
+        }
+        orf.dicodon = if n > 0 { total / n as f64 } else { 0.0 };
+    }
+}
