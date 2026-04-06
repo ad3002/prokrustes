@@ -1348,25 +1348,103 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
         crate::prophage::detect_prophage_regions(&selected_genes, glen)
     };
 
-    // 14c. Prophage routing: post-hoc adjustments (no DP re-run!)
-    // Only remove weak genes in degraded regions (pseudogene suppression).
-    // No bonus for prophage regions — adding genes through threshold
-    // adjustment generates too many FP.
+    // 14c. Dual hex model for prophage regions.
+    // Train a LOCAL hexamer model from ORFs inside prophage segments.
+    // Rescore phage-region ORFs with max(host_hex, phage_hex).
+    // Data shows: 91% of phage ORFs have positive frame_bias (real coding)
+    // but low host hex (wrong model). Local model fixes this.
     if !prophage_regions.is_empty() {
-        let before = results.len();
-        results.retain(|&i| {
-            let orf = &all_orfs[i];
-            let bonus = crate::prophage::region_bonus_for(orf.start, orf.end, &prophage_regions);
-            if bonus < -0.01 {
-                // Degraded region: remove weak genes (pseudogene suppression)
-                orf.score > 0.42 || orf.hex_avg > 0.15 || orf.rbs > 0.50
-            } else {
-                true // keep everything else
+        // Collect "alien coding" ORFs: low host hex BUT positive frame_bias.
+        // These are genes with different codon usage from host but real coding signal.
+        // Use detected prophage regions to narrow search but allow any ORF matching the pattern.
+        let host_hex_median = {
+            let mut h: Vec<f64> = all_orfs.iter()
+                .filter(|o| o.length >= 600 && o.hex_avg > -1.0)
+                .map(|o| o.hex_avg).collect();
+            h.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            if h.len() > 10 { h[h.len() / 2] } else { 0.3 }
+        };
+        // Alien = low host hex (below median * 0.5) + positive frame_bias (>0.3)
+        // + inside a detected prophage region + long enough (≥300bp) + is_longest
+        let alien_threshold = host_hex_median * 0.5;
+
+        let phage_orfs_p: Vec<Gene> = plus.iter()
+            .filter(|o| o.length >= 300 && o.is_longest
+                && o.hex_avg < alien_threshold && o.frame_bias > 0.3
+                && prophage_regions.iter().any(|(rs, re, _)|
+                    o.start >= *rs && o.end <= *re))
+            .cloned().collect();
+        let phage_orfs_m: Vec<Gene> = minus.iter()
+            .filter(|o| o.length >= 300 && o.is_longest
+                && o.hex_avg < alien_threshold && o.frame_bias > 0.3
+                && prophage_regions.iter().any(|(rs, re, _)|
+                    o.start >= *rs && o.end <= *re))
+            .cloned().collect();
+
+        let n_training = phage_orfs_p.len() + phage_orfs_m.len();
+
+        if n_training >= 20 {
+            // Train local hex model
+            let phage_hex_p = train_hex_from_set(genome, &phage_orfs_p, 100);
+            let phage_hex_m = train_hex_from_set(&rc, &phage_orfs_m, 100);
+            let phage_hex = merge_hex(&phage_hex_p, &phage_hex_m);
+
+            if let Some(ref phex) = phage_hex {
+                let mut rescored = 0;
+
+                // Rescore ORFs in prophage regions: use max(host_hex, phage_hex)
+                for orf in all_orfs.iter_mut() {
+                    // Only rescore ORFs that are THEMSELVES low-hex (alien candidates)
+                    // Don't touch host-like ORFs even if in phage regions
+                    if orf.hex_avg >= alien_threshold { continue; }
+                    let in_phage = prophage_regions.iter().any(|(rs, re, _)|
+                        orf.start >= *rs && orf.end <= *re);
+                    if !in_phage { continue; }
+
+                    // Score with phage model
+                    let seq_ref = if orf.is_plus { genome } else { &rc };
+                    if orf.seq_end > seq_ref.len() || orf.seq_start >= orf.seq_end { continue; }
+                    let s = &seq_ref[orf.seq_start..orf.seq_end];
+                    if s.len() < 6 { continue; }
+
+                    let mut phage_scores = [0.0f64; 3];
+                    let mut phage_counts = [0u32; 3];
+                    for i in 0..s.len().saturating_sub(5) {
+                        if let Some(idx) = crate::io::hex_enc(&s[i..i+6]) {
+                            let f = i % 3;
+                            phage_scores[f] += phex[idx];
+                            phage_counts[f] += 1;
+                        }
+                    }
+                    let phage_hex_avg = if phage_counts[0] > 0 {
+                        phage_scores[0] / phage_counts[0] as f64
+                    } else { 0.0 };
+
+                    // Dual model scoring: if phage model scores MUCH higher than host,
+                    // boost the ORF. The difference phage_hex - host_hex indicates
+                    // how much better the alternative model explains this ORF.
+                    let host_hex = orf.hex_avg;
+                    let improvement = phage_hex_avg - host_hex;
+
+                    // Only boost if phage model is significantly better (>0.1 improvement)
+                    // AND phage model gives positive score (ORF is coding by phage model)
+                    if improvement > 0.2 && phage_hex_avg > 0.05 {
+                        // Blend: keep some host signal to avoid overfitting
+                        // 70% phage + 30% host for the alien ORFs
+                        orf.hex_avg = 0.7 * phage_hex_avg + 0.3 * host_hex;
+                        orf.score = composite_score(orf, gc3_target);
+                        rescored += 1;
+                    }
+                }
+
+                if rescored > 0 {
+                    eprintln!("Dual hex model: {} ORFs rescored (trained from {} phage genes)",
+                        rescored, n_training);
+                    // Don't re-run DP (causes cascading side effects).
+                    // Instead: rescued ORFs will benefit in step 16a smORF rescue
+                    // and step 16b confidence filter (higher hex → passes filter).
+                }
             }
-        });
-        let removed = before - results.len();
-        if removed > 0 {
-            eprintln!("Prophage routing: {} weak genes removed from degraded regions", removed);
         }
     }
 
