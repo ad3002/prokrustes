@@ -1562,6 +1562,14 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     output.sort_by_key(|g| g.start);
     output.dedup_by(|a, b| a.start == b.start && a.end == b.end && a.is_plus == b.is_plus);
 
+    // 16x. Post-DP start correction — DISABLED
+    // Attempted: shorten genes where upstream_coding < 0.
+    // Problem: 906/4300 genes shortened on E. coli (too many).
+    // upstream_coding < 0 is normal for any real start (upstream IS non-coding).
+    // Need: pairwise training on labeled data, not heuristic criteria.
+    // See scripts/start_pairwise_data.py for the training data (1463 pairs).
+    // Future: train LightGBM pairwise ranker on these features.
+
     // 16a. smORF rescue: find short genes in intergenic gaps
     // The main pipeline misses many short genes (90-300bp) due to strict
     // hexamer/length thresholds. After confirming the large gene framework,
