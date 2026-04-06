@@ -1,0 +1,3722 @@
+{
+  "dnaN|recF": {
+    "left": "dnaN",
+    "right": "recF",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      10,
+      362,
+      20,
+      128
+    ]
+  },
+  "recF|gyrB": {
+    "left": "recF",
+    "right": "gyrB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      29,
+      318,
+      803,
+      18
+    ]
+  },
+  "xylA|xylB": {
+    "left": "xylA",
+    "right": "xylB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      72,
+      151,
+      86
+    ]
+  },
+  "dppA|dppB": {
+    "left": "dppA",
+    "right": "dppB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      308,
+      17,
+      144
+    ]
+  },
+  "dppB|dppC": {
+    "left": "dppB",
+    "right": "dppC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      10,
+      6
+    ]
+  },
+  "dppC|dppD": {
+    "left": "dppC",
+    "right": "dppD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      5,
+      1
+    ]
+  },
+  "rpsL|rpsG": {
+    "left": "rpsL",
+    "right": "rpsG",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      97,
+      42,
+      151,
+      83
+    ]
+  },
+  "rpsG|fusA": {
+    "left": "rpsG",
+    "right": "fusA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      28,
+      54,
+      207,
+      87
+    ]
+  },
+  "fusA|tufA": {
+    "left": "fusA",
+    "right": "tufA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      71,
+      120,
+      65
+    ]
+  },
+  "tufA|rpsJ": {
+    "left": "tufA",
+    "right": "rpsJ",
+    "expected_genes": 3,
+    "n_genomes": 3,
+    "gene_counts": [
+      17,
+      1,
+      3
+    ],
+    "spans": [
+      16875,
+      1292,
+      1756
+    ]
+  },
+  "rpsJ|rplC": {
+    "left": "rpsJ",
+    "right": "rplC",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      33,
+      40,
+      17,
+      21
+    ]
+  },
+  "rplC|rplD": {
+    "left": "rplC",
+    "right": "rplD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      28,
+      40
+    ]
+  },
+  "rplW|rplB": {
+    "left": "rplW",
+    "right": "rplB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      18,
+      32,
+      93,
+      5
+    ]
+  },
+  "rplB|rpsS": {
+    "left": "rplB",
+    "right": "rpsS",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      58,
+      33,
+      41,
+      6
+    ]
+  },
+  "rpsS|rplV": {
+    "left": "rpsS",
+    "right": "rplV",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      17,
+      16,
+      6
+    ]
+  },
+  "rplV|rpsC": {
+    "left": "rplV",
+    "right": "rpsC",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      18,
+      4,
+      30,
+      5
+    ]
+  },
+  "rpsC|rplP": {
+    "left": "rpsC",
+    "right": "rplP",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      2,
+      41,
+      4
+    ]
+  },
+  "rpmC|rpsQ": {
+    "left": "rpmC",
+    "right": "rpsQ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      23,
+      8
+    ]
+  },
+  "rpsQ|rplN": {
+    "left": "rpsQ",
+    "right": "rplN",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      3,
+      0
+    ],
+    "spans": [
+      165,
+      24,
+      5207,
+      151
+    ]
+  },
+  "rplN|rplX": {
+    "left": "rplN",
+    "right": "rplX",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      1,
+      1
+    ]
+  },
+  "rplX|rplE": {
+    "left": "rplX",
+    "right": "rplE",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      27,
+      107,
+      2
+    ]
+  },
+  "rpsH|rplF": {
+    "left": "rpsH",
+    "right": "rplF",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      30,
+      60,
+      24,
+      4
+    ]
+  },
+  "rplF|rplR": {
+    "left": "rplF",
+    "right": "rplR",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      10,
+      33,
+      4,
+      3
+    ]
+  },
+  "rplR|rpsE": {
+    "left": "rplR",
+    "right": "rpsE",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      25,
+      40,
+      20,
+      5
+    ]
+  },
+  "rpsE|rpmD": {
+    "left": "rpsE",
+    "right": "rpmD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      14,
+      3
+    ]
+  },
+  "rpmD|rplO": {
+    "left": "rpmD",
+    "right": "rplO",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      31
+    ]
+  },
+  "rplO|secY": {
+    "left": "rplO",
+    "right": "secY",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      8,
+      2,
+      102
+    ]
+  },
+  "secY|rpmJ": {
+    "left": "secY",
+    "right": "rpmJ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      32,
+      19
+    ]
+  },
+  "rpmJ|rpsM": {
+    "left": "rpmJ",
+    "right": "rpsM",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      147,
+      23,
+      83,
+      135
+    ]
+  },
+  "rpsM|rpsK": {
+    "left": "rpsM",
+    "right": "rpsK",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      21,
+      49,
+      1
+    ]
+  },
+  "rpoA|rplQ": {
+    "left": "rpoA",
+    "right": "rplQ",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      41,
+      78,
+      29
+    ]
+  },
+  "trkA|fmt": {
+    "left": "trkA",
+    "right": "fmt",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      1
+    ],
+    "spans": [
+      1357,
+      1329,
+      1343
+    ]
+  },
+  "fmt|def": {
+    "left": "fmt",
+    "right": "def",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      55
+    ]
+  },
+  "accC|accB": {
+    "left": "accC",
+    "right": "accB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      12,
+      2
+    ]
+  },
+  "rplM|rpsI": {
+    "left": "rplM",
+    "right": "rpsI",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      21,
+      10
+    ]
+  },
+  "gltD|gltB": {
+    "left": "gltD",
+    "right": "gltB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      29
+    ]
+  },
+  "rplU|rpmA": {
+    "left": "rplU",
+    "right": "rpmA",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      21,
+      4
+    ]
+  },
+  "rimP|nusA": {
+    "left": "rimP",
+    "right": "nusA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      28,
+      35,
+      3
+    ]
+  },
+  "nusA|infB": {
+    "left": "nusA",
+    "right": "infB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      2,
+      0,
+      0
+    ],
+    "spans": [
+      25,
+      613,
+      11,
+      121
+    ]
+  },
+  "infB|rbfA": {
+    "left": "infB",
+    "right": "rbfA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      164,
+      292,
+      207
+    ]
+  },
+  "truB|rpsO": {
+    "left": "truB",
+    "right": "rpsO",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      149,
+      138
+    ]
+  },
+  "rpsO|pnp": {
+    "left": "rpsO",
+    "right": "pnp",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      247,
+      230
+    ]
+  },
+  "rpoD|dnaG": {
+    "left": "rpoD",
+    "right": "dnaG",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      195,
+      80
+    ]
+  },
+  "dnaG|rpsU": {
+    "left": "dnaG",
+    "right": "rpsU",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      111,
+      602,
+      227
+    ]
+  },
+  "parE|parC": {
+    "left": "parE",
+    "right": "parC",
+    "expected_genes": 6,
+    "n_genomes": 3,
+    "gene_counts": [
+      10,
+      0,
+      6
+    ],
+    "spans": [
+      7531,
+      4,
+      4742
+    ]
+  },
+  "tktA|pgk": {
+    "left": "tktA",
+    "right": "pgk",
+    "expected_genes": 6,
+    "n_genomes": 3,
+    "gene_counts": [
+      7,
+      2,
+      6
+    ],
+    "spans": [
+      7022,
+      3124,
+      4527
+    ]
+  },
+  "ptsP|lgt": {
+    "left": "ptsP",
+    "right": "lgt",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      3,
+      0
+    ],
+    "spans": [
+      151,
+      2850,
+      206
+    ]
+  },
+  "lgt|thyA": {
+    "left": "lgt",
+    "right": "thyA",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      7,
+      206
+    ]
+  },
+  "cysD|cysN": {
+    "left": "cysD",
+    "right": "cysN",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      2,
+      12
+    ]
+  },
+  "gabT|gabD": {
+    "left": "gabT",
+    "right": "gabD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      14,
+      69,
+      1
+    ]
+  },
+  "ffh|rpsP": {
+    "left": "ffh",
+    "right": "rpsP",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      249,
+      106,
+      305
+    ]
+  },
+  "rpsP|rimM": {
+    "left": "rpsP",
+    "right": "rimM",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      19,
+      758,
+      7
+    ]
+  },
+  "rimM|trmD": {
+    "left": "rimM",
+    "right": "trmD",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      31,
+      31
+    ]
+  },
+  "trmD|rplS": {
+    "left": "trmD",
+    "right": "rplS",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      42,
+      140,
+      22
+    ]
+  },
+  "ung|nadB": {
+    "left": "ung",
+    "right": "nadB",
+    "expected_genes": 4,
+    "n_genomes": 3,
+    "gene_counts": [
+      4,
+      10,
+      4
+    ],
+    "spans": [
+      4712,
+      10578,
+      4546
+    ]
+  },
+  "lepA|lepB": {
+    "left": "lepA",
+    "right": "lepB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      6,
+      6
+    ]
+  },
+  "lepB|rnc": {
+    "left": "lepB",
+    "right": "rnc",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      272,
+      543,
+      264
+    ]
+  },
+  "era|recO": {
+    "left": "era",
+    "right": "recO",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      61,
+      12
+    ]
+  },
+  "guaB|guaA": {
+    "left": "guaB",
+    "right": "guaA",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      69,
+      55
+    ]
+  },
+  "bcp|dapA": {
+    "left": "bcp",
+    "right": "dapA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      718,
+      753,
+      639
+    ]
+  },
+  "dapA|purC": {
+    "left": "dapA",
+    "right": "purC",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      2,
+      1
+    ],
+    "spans": [
+      1264,
+      1934,
+      1060
+    ]
+  },
+  "pta|ackA": {
+    "left": "pta",
+    "right": "ackA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      75,
+      63,
+      66
+    ]
+  },
+  "nuoA|nuoB": {
+    "left": "nuoA",
+    "right": "nuoB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      11,
+      9,
+      5
+    ]
+  },
+  "nuoB|nuoE": {
+    "left": "nuoB",
+    "right": "nuoE",
+    "expected_genes": 0.5,
+    "n_genomes": 4,
+    "gene_counts": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      1899,
+      1864,
+      2026,
+      1878
+    ]
+  },
+  "nuoF|nuoG": {
+    "left": "nuoF",
+    "right": "nuoG",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      53,
+      132,
+      17
+    ]
+  },
+  "nuoH|nuoI": {
+    "left": "nuoH",
+    "right": "nuoI",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      12
+    ]
+  },
+  "nuoI|nuoJ": {
+    "left": "nuoI",
+    "right": "nuoJ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      12
+    ]
+  },
+  "nuoL|nuoM": {
+    "left": "nuoL",
+    "right": "nuoM",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      164,
+      28,
+      297
+    ]
+  },
+  "nuoM|nuoN": {
+    "left": "nuoM",
+    "right": "nuoN",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      7,
+      8,
+      179
+    ]
+  },
+  "menD|menB": {
+    "left": "menD",
+    "right": "menB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      770,
+      1028,
+      759
+    ]
+  },
+  "fruK|fruA": {
+    "left": "fruK",
+    "right": "fruA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      15,
+      4
+    ]
+  },
+  "gatA|gatB": {
+    "left": "gatA",
+    "right": "gatB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      31,
+      107,
+      14
+    ]
+  },
+  "hisD|hisG": {
+    "left": "hisD",
+    "right": "hisG",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      6,
+      126,
+      89,
+      36
+    ]
+  },
+  "fliP|fliN": {
+    "left": "fliP",
+    "right": "fliN",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      368,
+      364
+    ]
+  },
+  "fliF|fliE": {
+    "left": "fliF",
+    "right": "fliE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      215,
+      195
+    ]
+  },
+  "fliS|fliD": {
+    "left": "fliS",
+    "right": "fliD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      25,
+      22,
+      6
+    ]
+  },
+  "flhB|flhA": {
+    "left": "flhB",
+    "right": "flhA",
+    "expected_genes": 1.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      2,
+      0
+    ],
+    "spans": [
+      2847,
+      33
+    ]
+  },
+  "aspS|ruvC": {
+    "left": "aspS",
+    "right": "ruvC",
+    "expected_genes": 2,
+    "n_genomes": 3,
+    "gene_counts": [
+      2,
+      1,
+      2
+    ],
+    "spans": [
+      1374,
+      898,
+      1349
+    ]
+  },
+  "ruvC|ruvA": {
+    "left": "ruvC",
+    "right": "ruvA",
+    "expected_genes": 2,
+    "n_genomes": 3,
+    "gene_counts": [
+      2,
+      0,
+      2
+    ],
+    "spans": [
+      879,
+      17,
+      2532
+    ]
+  },
+  "ruvA|ruvB": {
+    "left": "ruvA",
+    "right": "ruvB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      9,
+      11
+    ]
+  },
+  "infC|rpmI": {
+    "left": "infC",
+    "right": "rpmI",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      97,
+      50,
+      66
+    ]
+  },
+  "rpmI|rplT": {
+    "left": "rpmI",
+    "right": "rplT",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      53,
+      62,
+      101,
+      141
+    ]
+  },
+  "trpD|trpC": {
+    "left": "trpD",
+    "right": "trpC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      1,
+      26
+    ]
+  },
+  "narJ|narH": {
+    "left": "narJ",
+    "right": "narH",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      6,
+      26
+    ]
+  },
+  "minC|minD": {
+    "left": "minC",
+    "right": "minD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      24,
+      62,
+      77
+    ]
+  },
+  "minD|minE": {
+    "left": "minD",
+    "right": "minE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      58
+    ]
+  },
+  "tmk|pabC": {
+    "left": "tmk",
+    "right": "pabC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      1015,
+      1084,
+      1005
+    ]
+  },
+  "acpP|fabG": {
+    "left": "acpP",
+    "right": "fabG",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      211,
+      196,
+      140
+    ]
+  },
+  "fabG|fabD": {
+    "left": "fabG",
+    "right": "fabD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      23,
+      3
+    ]
+  },
+  "fabD|plsX": {
+    "left": "fabD",
+    "right": "plsX",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      1
+    ],
+    "spans": [
+      1037,
+      106,
+      1037
+    ]
+  },
+  "plsX|rpmF": {
+    "left": "plsX",
+    "right": "rpmF",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      81,
+      34,
+      117
+    ]
+  },
+  "rpmF|rne": {
+    "left": "rpmF",
+    "right": "rne",
+    "expected_genes": 4,
+    "n_genomes": 3,
+    "gene_counts": [
+      4,
+      5,
+      4
+    ],
+    "spans": [
+      3000,
+      4496,
+      4275
+    ]
+  },
+  "flgL|flgK": {
+    "left": "flgL",
+    "right": "flgK",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      11
+    ]
+  },
+  "flgG|flgF": {
+    "left": "flgG",
+    "right": "flgF",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      172,
+      3
+    ]
+  },
+  "flgE|flgD": {
+    "left": "flgE",
+    "right": "flgD",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      25,
+      15
+    ]
+  },
+  "pyrD|pepN": {
+    "left": "pyrD",
+    "right": "pepN",
+    "expected_genes": 12,
+    "n_genomes": 3,
+    "gene_counts": [
+      12,
+      32,
+      0
+    ],
+    "spans": [
+      11534,
+      44651,
+      134
+    ]
+  },
+  "kdsB|lpxK": {
+    "left": "kdsB",
+    "right": "lpxK",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      1
+    ],
+    "spans": [
+      1500,
+      223,
+      1491
+    ]
+  },
+  "rpsA|cmk": {
+    "left": "rpsA",
+    "right": "cmk",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      111,
+      268,
+      19
+    ]
+  },
+  "serS|ftsK": {
+    "left": "serS",
+    "right": "ftsK",
+    "expected_genes": 2,
+    "n_genomes": 3,
+    "gene_counts": [
+      2,
+      2,
+      2
+    ],
+    "spans": [
+      2215,
+      2109,
+      2356
+    ]
+  },
+  "aat|infA": {
+    "left": "aat",
+    "right": "infA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      285,
+      867,
+      303
+    ]
+  },
+  "infA|cspD": {
+    "left": "infA",
+    "right": "cspD",
+    "expected_genes": 3,
+    "n_genomes": 3,
+    "gene_counts": [
+      3,
+      2,
+      8
+    ],
+    "spans": [
+      3635,
+      2980,
+      8310
+    ]
+  },
+  "moaE|moaD": {
+    "left": "moaE",
+    "right": "moaD",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      2,
+      5
+    ]
+  },
+  "moaC|moaA": {
+    "left": "moaC",
+    "right": "moaA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      537,
+      1,
+      526
+    ]
+  },
+  "modC|modB": {
+    "left": "modC",
+    "right": "modB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      3,
+      2
+    ]
+  },
+  "cydB|cydA": {
+    "left": "cydB",
+    "right": "cydA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      30,
+      3
+    ]
+  },
+  "sdhB|sdhA": {
+    "left": "sdhB",
+    "right": "sdhA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      3,
+      3
+    ]
+  },
+  "kdpF|kdpA": {
+    "left": "kdpF",
+    "right": "kdpA",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      16
+    ]
+  },
+  "kdpA|kdpB": {
+    "left": "kdpA",
+    "right": "kdpB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      23,
+      12,
+      6,
+      22
+    ]
+  },
+  "kdpB|kdpC": {
+    "left": "kdpB",
+    "right": "kdpC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      9,
+      54
+    ]
+  },
+  "lnt|leuS": {
+    "left": "lnt",
+    "right": "leuS",
+    "expected_genes": 14,
+    "n_genomes": 3,
+    "gene_counts": [
+      14,
+      2,
+      17
+    ],
+    "spans": [
+      14560,
+      1486,
+      18448
+    ]
+  },
+  "leuS|holA": {
+    "left": "leuS",
+    "right": "holA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      596,
+      728,
+      605
+    ]
+  },
+  "lipB|lipA": {
+    "left": "lipB",
+    "right": "lipA",
+    "expected_genes": 1.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      1,
+      1
+    ],
+    "spans": [
+      1421,
+      1445
+    ]
+  },
+  "ahpF|ahpC": {
+    "left": "ahpF",
+    "right": "ahpC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      245,
+      101,
+      230
+    ]
+  },
+  "amtB|glnK": {
+    "left": "amtB",
+    "right": "glnK",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      30,
+      40,
+      12,
+      18
+    ]
+  },
+  "clpX|clpP": {
+    "left": "clpX",
+    "right": "clpP",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      126,
+      3,
+      239
+    ]
+  },
+  "clpP|tig": {
+    "left": "clpP",
+    "right": "tig",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      246,
+      138,
+      235
+    ]
+  },
+  "ispA|dxs": {
+    "left": "ispA",
+    "right": "dxs",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      25,
+      109,
+      24
+    ]
+  },
+  "dxs|thiL": {
+    "left": "dxs",
+    "right": "thiL",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      5,
+      1
+    ],
+    "spans": [
+      1704,
+      4223,
+      1628
+    ]
+  },
+  "thiL|nusB": {
+    "left": "thiL",
+    "right": "nusB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      78,
+      19,
+      67
+    ]
+  },
+  "secF|secD": {
+    "left": "secF",
+    "right": "secD",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      11,
+      61,
+      4
+    ]
+  },
+  "secD|yajC": {
+    "left": "secD",
+    "right": "yajC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      28,
+      110,
+      16
+    ]
+  },
+  "tgt|queA": {
+    "left": "tgt",
+    "right": "queA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      56,
+      13,
+      27,
+      186
+    ]
+  },
+  "prpD|prpC": {
+    "left": "prpD",
+    "right": "prpC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      2,
+      0
+    ],
+    "spans": [
+      34,
+      4178,
+      25
+    ]
+  },
+  "prpC|prpB": {
+    "left": "prpC",
+    "right": "prpB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      440,
+      93,
+      114
+    ]
+  },
+  "accA|dnaE": {
+    "left": "accA",
+    "right": "dnaE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      150
+    ]
+  },
+  "dnaE|rnhB": {
+    "left": "dnaE",
+    "right": "rnhB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      37,
+      1762,
+      11
+    ]
+  },
+  "fabZ|lpxD": {
+    "left": "fabZ",
+    "right": "lpxD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      105,
+      46,
+      93
+    ]
+  },
+  "frr|pyrH": {
+    "left": "frr",
+    "right": "pyrH",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      292,
+      3,
+      172,
+      134
+    ]
+  },
+  "pyrH|tsf": {
+    "left": "pyrH",
+    "right": "tsf",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      147,
+      199,
+      133
+    ]
+  },
+  "tsf|rpsB": {
+    "left": "tsf",
+    "right": "rpsB",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      258,
+      131,
+      12,
+      246,
+      124
+    ]
+  },
+  "rpsB|map": {
+    "left": "rpsB",
+    "right": "map",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      368,
+      265,
+      425
+    ]
+  },
+  "map|glnD": {
+    "left": "map",
+    "right": "glnD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      62,
+      167,
+      228
+    ]
+  },
+  "glnD|dapD": {
+    "left": "glnD",
+    "right": "dapD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      7,
+      0
+    ],
+    "spans": [
+      31,
+      5919,
+      30
+    ]
+  },
+  "folK|panB": {
+    "left": "folK",
+    "right": "panB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      7,
+      0,
+      0
+    ],
+    "spans": [
+      7652,
+      250,
+      110
+    ]
+  },
+  "panB|panC": {
+    "left": "panB",
+    "right": "panC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      113
+    ]
+  },
+  "panC|panD": {
+    "left": "panC",
+    "right": "panD",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      1250,
+      94,
+      23,
+      80
+    ]
+  },
+  "secA|lpxC": {
+    "left": "secA",
+    "right": "lpxC",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      2,
+      1
+    ],
+    "spans": [
+      805,
+      1660,
+      837
+    ]
+  },
+  "lpxC|ftsZ": {
+    "left": "lpxC",
+    "right": "ftsZ",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      101,
+      113,
+      85
+    ]
+  },
+  "ftsZ|ftsA": {
+    "left": "ftsZ",
+    "right": "ftsA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      61,
+      51,
+      48,
+      27
+    ]
+  },
+  "ftsQ|murC": {
+    "left": "ftsQ",
+    "right": "murC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      915,
+      960,
+      757
+    ]
+  },
+  "murC|murG": {
+    "left": "murC",
+    "right": "murG",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      54,
+      107
+    ]
+  },
+  "murD|mraY": {
+    "left": "murD",
+    "right": "mraY",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      3,
+      14,
+      140
+    ]
+  },
+  "murE|ftsL": {
+    "left": "murE",
+    "right": "ftsL",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      1769,
+      1736,
+      1759
+    ]
+  },
+  "carB|carA": {
+    "left": "carB",
+    "right": "carA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      18,
+      682,
+      163,
+      2
+    ]
+  },
+  "carA|dapB": {
+    "left": "carA",
+    "right": "dapB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      1
+    ],
+    "spans": [
+      456,
+      183,
+      974
+    ]
+  },
+  "ileS|ribF": {
+    "left": "ileS",
+    "right": "ribF",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      43,
+      24,
+      28
+    ]
+  },
+  "ribF|rpsT": {
+    "left": "ribF",
+    "right": "rpsT",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      1,
+      1
+    ],
+    "spans": [
+      329,
+      1919,
+      322
+    ]
+  },
+  "dnaJ|dnaK": {
+    "left": "dnaJ",
+    "right": "dnaK",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      89,
+      116,
+      200,
+      68
+    ]
+  },
+  "thrC|thrB": {
+    "left": "thrC",
+    "right": "thrB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      1,
+      218
+    ]
+  },
+  "pepA|valS": {
+    "left": "pepA",
+    "right": "valS",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      0
+    ],
+    "spans": [
+      603,
+      926,
+      571
+    ]
+  },
+  "rplI|rpsR": {
+    "left": "rplI",
+    "right": "rpsR",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      1,
+      39,
+      0,
+      0
+    ],
+    "spans": [
+      42,
+      928,
+      34957,
+      30,
+      12
+    ]
+  },
+  "rpsR|rpsF": {
+    "left": "rpsR",
+    "right": "rpsF",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      1,
+      0,
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      326,
+      30,
+      603,
+      311,
+      3
+    ]
+  },
+  "purA|hflC": {
+    "left": "purA",
+    "right": "hflC",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      2,
+      1
+    ],
+    "spans": [
+      383,
+      1552,
+      315
+    ]
+  },
+  "hfq|miaA": {
+    "left": "hfq",
+    "right": "miaA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      86,
+      106,
+      71
+    ]
+  },
+  "ssb|uvrA": {
+    "left": "ssb",
+    "right": "uvrA",
+    "expected_genes": 0.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      1
+    ],
+    "spans": [
+      254,
+      1619
+    ]
+  },
+  "alr|dnaB": {
+    "left": "alr",
+    "right": "dnaB",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      53,
+      69,
+      21
+    ]
+  },
+  "purH|purD": {
+    "left": "purH",
+    "right": "purD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      104,
+      16
+    ]
+  },
+  "rpoC|rpoB": {
+    "left": "rpoC",
+    "right": "rpoB",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      77,
+      66,
+      63,
+      147
+    ]
+  },
+  "rpoB|rplL": {
+    "left": "rpoB",
+    "right": "rplL",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      320,
+      222,
+      308,
+      105
+    ]
+  },
+  "rplL|rplJ": {
+    "left": "rplL",
+    "right": "rplJ",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      67,
+      79,
+      53,
+      49
+    ]
+  },
+  "rplJ|rplA": {
+    "left": "rplJ",
+    "right": "rplA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      413,
+      199,
+      406,
+      16
+    ]
+  },
+  "rplA|rplK": {
+    "left": "rplA",
+    "right": "rplK",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      16
+    ]
+  },
+  "rplK|nusG": {
+    "left": "rplK",
+    "right": "nusG",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      159,
+      117,
+      146,
+      61
+    ]
+  },
+  "nusG|secE": {
+    "left": "nusG",
+    "right": "secE",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      2,
+      10,
+      17
+    ]
+  },
+  "rpmE|priA": {
+    "left": "rpmE",
+    "right": "priA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      203,
+      176,
+      182
+    ]
+  },
+  "hslV|hslU": {
+    "left": "hslV",
+    "right": "hslU",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      10,
+      29
+    ]
+  },
+  "glpF|glpK": {
+    "left": "glpF",
+    "right": "glpK",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      23,
+      40,
+      19,
+      8
+    ]
+  },
+  "rho|trxA": {
+    "left": "rho",
+    "right": "trxA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      327,
+      245,
+      419
+    ]
+  },
+  "ilvA|ilvD": {
+    "left": "ilvA",
+    "right": "ilvD",
+    "expected_genes": 4.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      9
+    ],
+    "spans": [
+      3,
+      6725
+    ]
+  },
+  "rbsR|rbsK": {
+    "left": "rbsR",
+    "right": "rbsK",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      54,
+      2
+    ]
+  },
+  "atpB|atpE": {
+    "left": "atpB",
+    "right": "atpE",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      47,
+      192,
+      49,
+      35,
+      27
+    ]
+  },
+  "atpE|atpF": {
+    "left": "atpE",
+    "right": "atpF",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      62,
+      31,
+      16,
+      47
+    ]
+  },
+  "atpF|atpH": {
+    "left": "atpF",
+    "right": "atpH",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      7
+    ]
+  },
+  "atpH|atpA": {
+    "left": "atpH",
+    "right": "atpA",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      61,
+      45,
+      6
+    ]
+  },
+  "atpA|atpG": {
+    "left": "atpA",
+    "right": "atpG",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      51,
+      7,
+      39
+    ]
+  },
+  "atpG|atpD": {
+    "left": "atpG",
+    "right": "atpD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      27,
+      40,
+      16
+    ]
+  },
+  "atpD|atpC": {
+    "left": "atpD",
+    "right": "atpC",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      21,
+      14,
+      12,
+      12
+    ]
+  },
+  "pstS|pstC": {
+    "left": "pstS",
+    "right": "pstC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      87,
+      120
+    ]
+  },
+  "pstA|pstB": {
+    "left": "pstA",
+    "right": "pstB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      183,
+      72
+    ]
+  },
+  "pstB|phoU": {
+    "left": "pstB",
+    "right": "phoU",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      3
+    ]
+  },
+  "rnpA|rpmH": {
+    "left": "rnpA",
+    "right": "rpmH",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      15,
+      152,
+      10,
+      17
+    ]
+  },
+  "sufD|sufC": {
+    "left": "sufD",
+    "right": "sufC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      18,
+      136
+    ]
+  },
+  "pheT|pheS": {
+    "left": "pheT",
+    "right": "pheS",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      35,
+      16
+    ]
+  },
+  "rplT|rpmI": {
+    "left": "rplT",
+    "right": "rpmI",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      24,
+      32,
+      38
+    ]
+  },
+  "rpmI|infC": {
+    "left": "rpmI",
+    "right": "infC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      62,
+      13,
+      81
+    ]
+  },
+  "infC|thrS": {
+    "left": "infC",
+    "right": "thrS",
+    "expected_genes": 3.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      6
+    ],
+    "spans": [
+      92,
+      5908
+    ]
+  },
+  "hutH|hutI": {
+    "left": "hutH",
+    "right": "hutI",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      0
+    ],
+    "spans": [
+      3584,
+      1668,
+      661
+    ]
+  },
+  "dnaA|dnaN": {
+    "left": "dnaA",
+    "right": "dnaN",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      29,
+      189,
+      528
+    ]
+  },
+  "cysS|rlmB": {
+    "left": "cysS",
+    "right": "rlmB",
+    "expected_genes": 0.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      1,
+      0
+    ],
+    "spans": [
+      528,
+      419
+    ]
+  },
+  "secE|nusG": {
+    "left": "secE",
+    "right": "nusG",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      280,
+      179
+    ]
+  },
+  "nusG|rplK": {
+    "left": "nusG",
+    "right": "rplK",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      52,
+      168,
+      102
+    ]
+  },
+  "rplK|rplA": {
+    "left": "rplK",
+    "right": "rplA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      67,
+      95,
+      87
+    ]
+  },
+  "rplA|rplJ": {
+    "left": "rplA",
+    "right": "rplJ",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      9,
+      0,
+      0
+    ],
+    "spans": [
+      12052,
+      252,
+      247
+    ]
+  },
+  "rplJ|rplL": {
+    "left": "rplJ",
+    "right": "rplL",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      37,
+      46,
+      88
+    ]
+  },
+  "rplL|rpoB": {
+    "left": "rplL",
+    "right": "rpoB",
+    "expected_genes": 7.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      13,
+      1
+    ],
+    "spans": [
+      10566,
+      941
+    ]
+  },
+  "rpoB|rpoC": {
+    "left": "rpoB",
+    "right": "rpoC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      45,
+      62
+    ]
+  },
+  "rplE|rpsH": {
+    "left": "rplE",
+    "right": "rpsH",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      1,
+      0
+    ],
+    "spans": [
+      354,
+      240,
+      92
+    ]
+  },
+  "glpK|glpD": {
+    "left": "glpK",
+    "right": "glpD",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      1,
+      0,
+      3
+    ],
+    "spans": [
+      1239,
+      141,
+      5144
+    ]
+  },
+  "gmk|rpoZ": {
+    "left": "gmk",
+    "right": "rpoZ",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      89,
+      4,
+      66
+    ]
+  },
+  "sucC|sucD": {
+    "left": "sucC",
+    "right": "sucD",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      29,
+      13
+    ]
+  },
+  "pstA|pstC": {
+    "left": "pstA",
+    "right": "pstC",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      20,
+      2,
+      5
+    ]
+  },
+  "pstC|pstS": {
+    "left": "pstC",
+    "right": "pstS",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      423,
+      69,
+      146
+    ]
+  },
+  "dnaK|grpE": {
+    "left": "dnaK",
+    "right": "grpE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      90,
+      24
+    ]
+  },
+  "aspS|hisS": {
+    "left": "aspS",
+    "right": "hisS",
+    "expected_genes": 3.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      7,
+      0
+    ],
+    "spans": [
+      7018,
+      14
+    ]
+  },
+  "rpmA|rplU": {
+    "left": "rpmA",
+    "right": "rplU",
+    "expected_genes": 0,
+    "n_genomes": 5,
+    "gene_counts": [
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      24,
+      354,
+      108,
+      15,
+      23
+    ]
+  },
+  "clpX|tig": {
+    "left": "clpX",
+    "right": "tig",
+    "expected_genes": 2.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      4,
+      0
+    ],
+    "spans": [
+      4403,
+      272
+    ]
+  },
+  "leuD|leuC": {
+    "left": "leuD",
+    "right": "leuC",
+    "expected_genes": 0.0,
+    "n_genomes": 4,
+    "gene_counts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      13,
+      113,
+      25
+    ]
+  },
+  "modA|modB": {
+    "left": "modA",
+    "right": "modB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      3,
+      47
+    ]
+  },
+  "atpC|atpD": {
+    "left": "atpC",
+    "right": "atpD",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      42,
+      24,
+      148
+    ]
+  },
+  "tig|clpP": {
+    "left": "tig",
+    "right": "clpP",
+    "expected_genes": 17.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      35
+    ],
+    "spans": [
+      94,
+      33207
+    ]
+  },
+  "rpsD|rpsK": {
+    "left": "rpsD",
+    "right": "rpsK",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      120,
+      9
+    ]
+  },
+  "rpsK|rpsM": {
+    "left": "rpsK",
+    "right": "rpsM",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      19,
+      12,
+      4
+    ]
+  },
+  "rpsM|rpmJ": {
+    "left": "rpsM",
+    "right": "rpmJ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      131,
+      216
+    ]
+  },
+  "secY|rplO": {
+    "left": "secY",
+    "right": "rplO",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      1,
+      5
+    ]
+  },
+  "rplO|rpmD": {
+    "left": "rplO",
+    "right": "rpmD",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      31
+    ]
+  },
+  "rpmD|rpsE": {
+    "left": "rpmD",
+    "right": "rpsE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      3,
+      11
+    ]
+  },
+  "rpsE|rplR": {
+    "left": "rpsE",
+    "right": "rplR",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      4,
+      6
+    ]
+  },
+  "rplR|rplF": {
+    "left": "rplR",
+    "right": "rplF",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      11,
+      22
+    ]
+  },
+  "rplF|rpsH": {
+    "left": "rplF",
+    "right": "rpsH",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      16
+    ]
+  },
+  "rpsH|rpsN": {
+    "left": "rpsH",
+    "right": "rpsN",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      190,
+      55
+    ]
+  },
+  "rpsN|rplE": {
+    "left": "rpsN",
+    "right": "rplE",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      14,
+      7
+    ]
+  },
+  "rplX|rplN": {
+    "left": "rplX",
+    "right": "rplN",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      21
+    ]
+  },
+  "rplN|rpsQ": {
+    "left": "rplN",
+    "right": "rpsQ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      24,
+      3
+    ]
+  },
+  "rplP|rpsC": {
+    "left": "rplP",
+    "right": "rpsC",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      24
+    ]
+  },
+  "rpsC|rplV": {
+    "left": "rpsC",
+    "right": "rplV",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      6
+    ]
+  },
+  "rplV|rpsS": {
+    "left": "rplV",
+    "right": "rpsS",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      13,
+      36
+    ]
+  },
+  "rpsS|rplB": {
+    "left": "rpsS",
+    "right": "rplB",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      17,
+      21
+    ]
+  },
+  "rplB|rplW": {
+    "left": "rplB",
+    "right": "rplW",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      12,
+      6
+    ]
+  },
+  "rplC|rpsJ": {
+    "left": "rplC",
+    "right": "rpsJ",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      83,
+      19
+    ]
+  },
+  "rpsG|rpsL": {
+    "left": "rpsG",
+    "right": "rpsL",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      100,
+      160
+    ]
+  },
+  "rpsL|rpoC": {
+    "left": "rpsL",
+    "right": "rpoC",
+    "expected_genes": 2.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      5
+    ],
+    "spans": [
+      152,
+      3485
+    ]
+  },
+  "rpsI|rplM": {
+    "left": "rpsI",
+    "right": "rplM",
+    "expected_genes": 0.0,
+    "n_genomes": 2,
+    "gene_counts": [
+      0,
+      0
+    ],
+    "spans": [
+      15,
+      7
+    ]
+  },
+  "infB|nusA": {
+    "left": "infB",
+    "right": "nusA",
+    "expected_genes": 1,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      1,
+      1
+    ],
+    "spans": [
+      28,
+      512,
+      578
+    ]
+  },
+  "pstB|pstA": {
+    "left": "pstB",
+    "right": "pstA",
+    "expected_genes": 0,
+    "n_genomes": 3,
+    "gene_counts": [
+      0,
+      0,
+      0
+    ],
+    "spans": [
+      16,
+      36,
+      54
+    ]
+  },
+  "tuf|rpsJ": {
+    "left": "tuf",
+    "right": "rpsJ",
+    "expected_genes": 7.5,
+    "n_genomes": 2,
+    "gene_counts": [
+      15,
+      0
+    ],
+    "spans": [
+      14476,
+      139
+    ]
+  }
+}
