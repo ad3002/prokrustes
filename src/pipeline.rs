@@ -776,10 +776,10 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
                                 - sub[si].start.max(sub[ci].start) as isize + 1;
                             if ov <= 4 { gap = -ov; } else { continue; }
                         }
-                        let b = if gap >= -4 && gap <= 4 { 0.15 }
-                            else if gap <= 30 { 0.10 }
-                            else if gap <= 80 { 0.05 }
-                            else if gap <= 150 { 0.02 }
+                        let b = if gap >= -4 && gap <= 4 { 0.04 }
+                            else if gap <= 30 { 0.03 }
+                            else if gap <= 80 { 0.02 }
+                            else if gap <= 150 { 0.01 }
                             else { 0.0 };
                         bonus = bonus.max(b);
                     }
