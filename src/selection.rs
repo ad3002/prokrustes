@@ -528,47 +528,8 @@ pub fn operon_rescue(selected: &mut Vec<usize>, all: &[Gene]) {
     }
 }
 
-/// Keep up to max_per_stop best starts per stop group (matches monolith's keep_best_starts).
-pub fn keep_best_starts(orfs: &mut Vec<Gene>, max_per_stop: usize) {
-    let mut groups: HashMap<(bool, u32), Vec<usize>> = HashMap::new();
-    for (i, orf) in orfs.iter().enumerate() {
-        let key = (orf.is_plus, orf.stop_group);
-        groups.entry(key).or_default().push(i);
-    }
-    let mut keep = vec![false; orfs.len()];
-    for (_, indices) in &groups {
-        let mut scored: Vec<(usize, f64)> = indices.iter().map(|&i| {
-            let orf = &orfs[i];
-            let rbs_pwm_norm = ((orf.rbs_pwm + 3.0) / 13.0).clamp(0.0, 1.0);
-            let rbs_c = orf.rbs.max(rbs_pwm_norm * 0.85);
-            let sc = orf.start_type();
-            let cn = ((orf.hex_avg + 1.0) / 4.0).clamp(0.0, 1.0);
-            let fb = (orf.frame_bias / 3.0).max(0.0);
-            let edge = ((orf.edge + 0.5) / 3.0).clamp(0.0, 1.0);
-            let sq = 0.26 * rbs_c
-                + 0.14 * cn
-                + 0.10 * fb
-                + 0.10 * edge
-                + 0.23 * sc
-                + 0.17 * (1.0 - (-(orf.length as f64) / 500.0).exp());
-            (i, sq)
-        }).collect();
-        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        for &(idx, sq) in scored.iter().take(max_per_stop) {
-            keep[idx] = true;
-            orfs[idx]._sq = sq;
-        }
-    }
-    let mut j = 0;
-    for i in 0..orfs.len() {
-        if keep[i] {
-            orfs.swap(i, j);
-            keep.swap(i, j);
-            j += 1;
-        }
-    }
-    orfs.truncate(j);
-}
+// keep_best_starts: REMOVED (dead code, never called).
+// Active version is inline in pipeline.rs run_prediction() step 2.
 
 pub fn rescue_atypical(selected: &mut Vec<usize>, all: &[Gene]) {
     let sel_set: HashSet<(usize, usize, bool)> = selected.iter().map(|&i| {
@@ -621,41 +582,5 @@ pub fn rescue_atypical(selected: &mut Vec<usize>, all: &[Gene]) {
     }
 }
 
-/// Post-DP start refinement: for each selected gene, check if a different
-/// start codon in the same stop-group gives better RBS + edge + codon type.
-/// From Python cycle 33.
-pub fn refine_starts(selected: &[usize], all: &[Gene]) -> Vec<usize> {
-    let mut refined = Vec::with_capacity(selected.len());
-    for &idx in selected {
-        let gene = &all[idx];
-        // Find alternatives with same stop_group and strand
-        let mut best_idx = idx;
-        let mut best_sq = start_quality(gene);
-
-        for (i, alt) in all.iter().enumerate() {
-            if alt.stop_group != gene.stop_group { continue; }
-            if alt.is_plus != gene.is_plus { continue; }
-            if alt.frame != gene.frame { continue; }
-            if alt.length < super::types::MIN_ORF { continue; }
-
-            let sq = start_quality(alt);
-            if sq > best_sq + 0.02 {
-                best_sq = sq;
-                best_idx = i;
-            }
-        }
-        refined.push(best_idx);
-    }
-    refined
-}
-
-/// Start quality score for refinement.
-fn start_quality(g: &Gene) -> f64 {
-    let rbs_pwm_norm = ((g.rbs_pwm + 3.0) / 13.0).clamp(0.0, 1.0);
-    let rbs_c = g.rbs.max(rbs_pwm_norm * 0.85);
-    let sc = g.start_type();
-    let edge = ((g.edge + 0.5) / 3.0).clamp(0.0, 1.0);
-    let cod = ((g.hex_avg + 1.0) / 4.0).clamp(0.0, 1.0);
-    let len_pen = 1.0 - (-(g.length as f64) / 400.0).exp();
-    0.30 * rbs_c + 0.22 * sc + 0.18 * edge + 0.15 * cod + 0.15 * len_pen
-}
+// refine_starts + start_quality: REMOVED (dead code, disabled since F1 0.927→0.833).
+// Start ranking is now done by LightGBM V2 model (pipeline.rs step after DP).

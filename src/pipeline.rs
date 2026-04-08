@@ -13,7 +13,7 @@ use crate::rbs::{score_rbs_at, build_rbs_pwm, score_rbs_pwm, compute_upstream_at
 use crate::scoring::{composite_score, compute_gc3, compute_gc3_bias, edge_coding_score};
 use crate::selection::{
     dp_select, gap_fill, detect_shadows, connection_score, operon_rescue,
-    rescue_atypical, refine_starts, gap_targeted_rescue, filter_same_strand_overlaps,
+    rescue_atypical, gap_targeted_rescue, filter_same_strand_overlaps,
     filter_opposite_strand_overlaps,
 };
 use crate::types::{HexModel, MonoModel};
@@ -1564,8 +1564,8 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     // (verified starts from experiments or comparative genomics).
     // Models kept: start_nn helps start selection (+0.001 F1), stop_nn computed but unused.
 
-    // 15b. Refine starts — DISABLED (reduces F1 from 0.927 to 0.833)
-    // results = refine_starts(&results, &all_orfs);
+    // 15b. Refine starts — REMOVED (was disabled, reduced F1 from 0.927 to 0.833).
+    // Start ranking now handled by LightGBM V2 model (step after DP).
 
     // 16. Collect and deduplicate
     let mut output: Vec<Gene> = results.iter().map(|&i| all_orfs[i].clone()).collect();
