@@ -24,6 +24,29 @@ pub fn main_cli() {
         eprintln!("Usage: prokrustes <fasta> [--ncrna <gff>] [--debug <start> <end> <strand>] [--dump-all-orfs] [--dump-tsv] [--hmm]");
         std::process::exit(1);
     }
+
+    // --train-only: early exit before reading args[1] as fasta
+    if args.iter().any(|a| a == "--train-only") {
+        let save_path = args.windows(2).find(|w| w[0] == "--save-hex").map(|w| w[1].clone())
+            .expect("--train-only requires --save-hex <path>");
+        let mut genomes: Vec<Vec<u8>> = Vec::new();
+        // Skip flag values (args following --save-hex, --load-hex, etc.)
+        let skip_flags: std::collections::HashSet<&str> = ["--save-hex","--load-hex","--train-also","--ncrna","--model"].iter().copied().collect();
+        let mut skip_next = false;
+        for a in args.iter().skip(1) {
+            if skip_next { skip_next = false; continue; }
+            if skip_flags.contains(a.as_str()) { skip_next = true; continue; }
+            if a.starts_with('-') { continue; }
+            for (_, seq) in crate::io::read_fasta_multi(a) { genomes.push(seq); }
+        }
+        eprintln!("Training pooled model on {} sequences...", genomes.len());
+        match train_pooled_hex(&genomes) {
+            Some(model) => { save_hex_model(&model, &save_path).expect("save failed"); }
+            None => { eprintln!("ERROR: not enough data"); std::process::exit(1); }
+        }
+        return;
+    }
+
     let contigs = crate::io::read_fasta_multi(&args[1]);
     if contigs.is_empty() {
         eprintln!("Error: no sequences found in FASTA file");
@@ -44,6 +67,43 @@ pub fn main_cli() {
             i += 1;
         }
         regions
+    };
+
+    // Parse --save-hex / --load-hex / --train-also flags
+    let save_hex_path: Option<String> = {
+        let mut p = None;
+        let mut i = 2;
+        while i + 1 < args.len() { if args[i] == "--save-hex" { p = Some(args[i+1].clone()); } i += 1; }
+        p
+    };
+    let load_hex_path: Option<String> = {
+        let mut p = None;
+        let mut i = 2;
+        while i + 1 < args.len() { if args[i] == "--load-hex" { p = Some(args[i+1].clone()); } i += 1; }
+        p
+    };
+    let train_also_paths: Vec<String> = {
+        let mut paths = Vec::new();
+        let mut i = 2;
+        while i + 1 < args.len() { if args[i] == "--train-also" { paths.push(args[i+1].clone()); } i += 1; }
+        paths
+    };
+
+    // Build prior hex model: --load-hex OR --train-also
+    let prior_hex: Option<HexModel> = if let Some(ref path) = load_hex_path {
+        load_hex_model(path)
+    } else if !train_also_paths.is_empty() {
+        let mut extra: Vec<Vec<u8>> = Vec::new();
+        for path in &train_also_paths {
+            for (_, seq) in crate::io::read_fasta_multi(path) { extra.push(seq); }
+        }
+        // Add target genome too for pooled training
+        extra.push(genome.clone());
+        eprintln!("Building pooled prior from {} + {} extra genome(s)...",
+                  args[1], train_also_paths.len());
+        train_pooled_hex(&extra)
+    } else {
+        None
     };
 
     // Terminator detection mode
@@ -126,7 +186,13 @@ pub fn main_cli() {
             eprintln!("  Annotating {} ({} bp)...", seqid, contig_seq.len());
         }
 
-        let (mut genes, all_orfs) = annotate(contig_seq);
+        let (mut genes, all_orfs, trained_hex) = annotate_impl(contig_seq, prior_hex.as_ref());
+        // Save hex model after first contig (pooled or self-trained)
+        if let Some(ref path) = save_hex_path {
+            if contig_info.is_empty() {  // only first contig
+                save_hex_model(&trained_hex, path).ok();
+            }
+        }
         filter_ncrna_overlaps(&mut genes, &ncrna_regions);
         crate::is_elements::correct_repeat_families(contig_seq, &mut genes);
 
@@ -811,7 +877,7 @@ fn run_prediction(all_orfs: &mut Vec<Gene>, thresh_adj: f64) -> (Vec<usize>, Vec
     (results, filtered)
 }
 
-pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
+pub fn annotate_impl(genome: &[u8], prior_hex: Option<&HexModel>) -> (Vec<Gene>, Vec<Gene>, HexModel) {
     let glen = genome.len();
     let rc = rev_comp(genome);
 
@@ -870,10 +936,11 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     crate::gc_frame::score_all_gc_frame(genome, &mut plus);
     crate::gc_frame::score_all_gc_frame(&rc, &mut minus);
 
-    // 4. Initial hexamer training — two strategies based on GC content
-    let gc_prefilter = gc3_target > 0.55;
-
-    let initial_hex = if gc_prefilter {
+    // 4. Initial hexamer training — prior injection or two-strategy bootstrap
+    let initial_hex = if let Some(prior) = prior_hex {
+        eprintln!("Using prior hex model (skipping bootstrap)");
+        Some(*prior)
+    } else if gc3_target > 0.55 {
         // HIGH-GC BOOTSTRAP: initial DP using only length + GC frame (no hexamers).
         // Selects a clean set of likely-real genes, then trains hexamers on them.
         // This prevents hexamer model from being contaminated by spurious long ORFs.
@@ -914,7 +981,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
                 .filter(|o| o.length >= 300 && o.is_longest)
                 .cloned().collect();
             result.sort_by_key(|g| g.start);
-            return (result, all);
+            return (result, all, [0.0f64; crate::types::N_HEX]);
         }
     };
 
@@ -1683,7 +1750,7 @@ pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
     // 124 of 221 FP are pseudogenes, but we can't remove them without
     // also removing real genes. Code kept for future use with homology info.
 
-    (output, all_orfs)
+    (output, all_orfs, hex_model)
 }
 
 
@@ -1972,4 +2039,89 @@ fn filter_pseudogenes(
     let mut idx = 0;
     genes.retain(|_| { let keep = !flagged[idx]; idx += 1; keep });
     removed
+}
+
+// ── Public API wrappers ───────────────────────────────────────────────────────
+
+/// Backward-compatible wrapper — self-training only, no prior.
+pub fn annotate(genome: &[u8]) -> (Vec<Gene>, Vec<Gene>) {
+    let (g, o, _) = annotate_impl(genome, None);
+    (g, o)
+}
+
+/// Annotate with a pre-trained prior hex model.
+/// Bootstrap is skipped; iterative self-training continues on this genome.
+pub fn annotate_with_prior(genome: &[u8], prior: &HexModel) -> (Vec<Gene>, Vec<Gene>) {
+    let (g, o, _) = annotate_impl(genome, Some(prior));
+    (g, o)
+}
+
+// ── Pooled training ───────────────────────────────────────────────────────────
+
+/// Train a hexamer model from multiple genomes combined.
+/// Uses long ORFs (>=900 bp) from each genome as positive signal.
+pub fn train_pooled_hex(genomes: &[Vec<u8>]) -> Option<HexModel> {
+    use crate::types::N_HEX;
+    let mut all_cod  = [0u32; N_HEX];
+    let mut all_ncod = [0u32; N_HEX];
+    let mut ct: u64 = 0;
+    let mut nt: u64 = 0;
+
+    for genome in genomes {
+        let rc = rev_comp(genome);
+        for (seq, is_plus) in [(&genome[..], true), (&rc[..], false)] {
+            let orfs = crate::orf::find_orfs(seq, is_plus, genome.len());
+            for orf in orfs.iter().filter(|o| o.length >= 900 && o.is_longest) {
+                let s = &seq[orf.seq_start..orf.seq_end];
+                let n = s.len();
+                let mut i = 0;
+                while i + 5 < n {
+                    if let Some(idx) = crate::io::hex_enc(&s[i..i+6]) { all_cod[idx]  += 1; ct += 1; }
+                    i += 3;
+                }
+                for shift in [1usize, 2] {
+                    let mut i = shift;
+                    while i + 5 < n {
+                        if let Some(idx) = crate::io::hex_enc(&s[i..i+6]) { all_ncod[idx] += 1; nt += 1; }
+                        i += 3;
+                    }
+                }
+                let rcs = rev_comp(s);
+                for fo in 0..3 {
+                    let mut i = fo;
+                    while i + 5 < rcs.len() {
+                        if let Some(idx) = crate::io::hex_enc(&rcs[i..i+6]) { all_ncod[idx] += 1; nt += 1; }
+                        i += 3;
+                    }
+                }
+            }
+        }
+    }
+    eprintln!("Pooled training: {} coding, {} non-coding hexamer counts from {} genomes",
+              ct, nt, genomes.len());
+    if ct < 500 || nt < 500 { return None; }
+    Some(crate::coding::build_hex_table(&all_cod, ct, &all_ncod, nt))
+}
+
+// ── Hex model I/O ─────────────────────────────────────────────────────────────
+
+pub fn save_hex_model(model: &HexModel, path: &str) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut f = std::fs::File::create(path)?;
+    for &v in model.iter() { f.write_all(&v.to_le_bytes())?; }
+    eprintln!("Saved hex model ({} floats) to {}", model.len(), path);
+    Ok(())
+}
+
+pub fn load_hex_model(path: &str) -> Option<HexModel> {
+    use std::io::Read;
+    let mut f = std::fs::File::open(path).ok()?;
+    let mut model = [0.0f64; crate::types::N_HEX];
+    let mut buf = [0u8; 8];
+    for v in model.iter_mut() {
+        f.read_exact(&mut buf).ok()?;
+        *v = f64::from_le_bytes(buf);
+    }
+    eprintln!("Loaded hex model from {}", path);
+    Some(model)
 }
